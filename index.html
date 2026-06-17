@@ -361,7 +361,7 @@
   /* MANAGER SCREEN */
   #screen-manager {
     background: transparent;
-    padding-bottom: 40px;
+    padding-bottom: 80px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -1581,11 +1581,18 @@ init();
     }
   });
 
-  // Prevent pull-to-refresh on Android
+  // Prevent pull-to-refresh on Android (but allow normal downward scroll)
+  let _touchStartY = 0;
+  document.body.addEventListener('touchstart', function(e) {
+    _touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
   document.body.addEventListener('touchmove', function(e) {
     if (e.touches.length === 1) {
-      var el = e.target.closest('.screen');
-      if (el && el.scrollTop === 0) e.preventDefault();
+      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+      const touchDelta = e.touches[0].clientY - _touchStartY;
+      // Only prevent pull-to-refresh: at top AND finger moving downward
+      if (scrollTop === 0 && touchDelta > 0) e.preventDefault();
     }
   }, { passive: false });
 </script>
@@ -1600,7 +1607,7 @@ init();
 ">
   <!-- Sheet — רצועה צפה -->
   <div style="
-    background: rgba(60,60,60,0.65);
+    background: rgba(60,60,60,0.50);
     height: 66px;
     border-radius: 16px;
     display: flex; align-items: center;
