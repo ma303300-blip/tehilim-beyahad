@@ -55,9 +55,19 @@
     overflow-x: hidden;
   }
 
+  /* BG IMAGE */
+  .bg-image {
+    position: fixed; inset: 0; z-index: 0;
+    background: url('bg.jpg') center center / cover no-repeat;
+    opacity: 0.07;
+    pointer-events: none;
+    mix-blend-mode: luminosity;
+  }
+
   /* ===== SCREENS ===== */
   .screen { display: none; min-height: 100vh; position: relative; }
   .screen.active { display: flex; flex-direction: column; }
+  .screen > *:not(.bg-image) { position: relative; z-index: 1; }
 
   /* ===== WELCOME SCREEN ===== */
   #screen-welcome {
@@ -556,6 +566,61 @@
   }
   .section-title span { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: 400; font-family: 'Heebo', sans-serif; }
 
+
+  /* EDIT PENCIL */
+  .btn-edit-pencil {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(201,168,76,0.15); border: 1.5px solid rgba(201,168,76,0.4);
+    color: var(--gold); font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: background 0.2s;
+  }
+  .btn-edit-pencil:active { background: rgba(201,168,76,0.35); }
+
+  /* MANAGER CARD (current manager display) */
+  .manager-card-wrap {
+    padding: 14px 16px 0;
+  }
+  .manager-card {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(16px);
+    border-radius: 20px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 8px 25px rgba(26,16,53,0.3), 0 0 0 1px rgba(201,168,76,0.3);
+    position: relative;
+  }
+  .manager-card-crown {
+    position: absolute; top: -10px; right: 14px;
+    font-size: 20px; line-height: 1;
+  }
+  .manager-card-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    border: 2px solid var(--gold); overflow: hidden; flex-shrink: 0;
+  }
+  .manager-card-avatar svg, .manager-card-avatar img { width:100%; height:100%; }
+  .manager-card-info { flex: 1; }
+  .manager-card-name { font-size: 17px; font-weight: 700; color: var(--deep); }
+  .manager-card-role { font-size: 12px; color: var(--gold); font-weight: 600; margin-top: 2px; }
+  .btn-exit-manager {
+    padding: 6px 12px; border-radius: 20px;
+    background: rgba(200,50,50,0.1); border: 1px solid rgba(200,50,50,0.3);
+    color: #c83232; font-size: 12px; font-weight: 700; cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* SELECT MANAGER MODAL */
+  .select-manager-list { display: flex; flex-direction: column; gap: 10px; padding: 16px 24px; }
+  .select-manager-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 12px;
+    background: white; cursor: pointer;
+    border: 2px solid transparent; transition: border-color 0.2s;
+  }
+  .select-manager-row:active { border-color: var(--gold); }
+  .select-manager-avatar { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+  .select-manager-avatar svg, .select-manager-avatar img { width:100%; height:100%; }
+  .select-manager-name { font-size: 15px; font-weight: 600; color: var(--deep); }
+
   /* SCROLLBAR */
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -573,6 +638,7 @@
 
 <!-- ===== SCREEN 1: WELCOME ===== -->
 <div id="screen-welcome" class="screen active">
+  <div class="bg-image"></div>
   <div class="welcome-stars" id="starsContainer"></div>
   <div class="welcome-inner">
     <div class="bsd-welcome">בס"ד</div>
@@ -637,6 +703,7 @@
 
 <!-- ===== SCREEN 2: MEMBER HOME ===== -->
 <div id="screen-home" class="screen">
+  <div class="bg-image"></div>
   <div class="home-top">
     <div class="bsd-top">בס"ד</div>
     <div class="date-display">
@@ -653,6 +720,7 @@
         <div class="card-phone" id="homeCardPhone">📞 מספר טלפון</div>
         <div class="card-badge">🕊️ מתפללת פעילה</div>
       </div>
+      <button class="btn-edit-pencil" id="btnEditHomeCard" title="עריכה">✏️</button>
     </div>
   </div>
 
@@ -666,6 +734,7 @@
 
 <!-- ===== SCREEN 3: MANAGER HOME ===== -->
 <div id="screen-manager" class="screen">
+  <div class="bg-image"></div>
   <div class="manager-header">
     <div class="bsd-top">בס"ד</div>
     <div class="date-display">
@@ -674,11 +743,29 @@
     </div>
   </div>
 
-  <div class="send-bar">
-    <button class="btn-send" id="btnSendChapters">
+  <!-- כרטיס מנהלת נוכחית -->
+  <div class="manager-card-wrap" id="managerCardWrap" style="display:none;">
+    <div class="manager-card">
+      <div class="manager-card-crown">👑</div>
+      <div class="manager-card-avatar" id="managerCardAvatar"></div>
+      <div class="manager-card-info">
+        <div class="manager-card-name" id="managerCardName"></div>
+        <div class="manager-card-role">מנהלת הקבוצה</div>
+      </div>
+      <button class="btn-exit-manager" id="btnExitManager">יציאה</button>
+    </div>
+  </div>
+
+  <div class="send-bar" style="display:flex; gap:10px; align-items:center;">
+    <button class="btn-send" id="btnSendChapters" style="flex:1;">
       <span>📤</span> שלחי פרקי תהילים
       <span class="selected-count" id="selectedCount">0</span>
     </button>
+    <button id="btnSelectManager" style="
+      background:rgba(201,168,76,0.15); border:1.5px solid rgba(201,168,76,0.4);
+      color:var(--gold); border-radius:14px; padding:13px 14px;
+      font-size:20px; cursor:pointer; flex-shrink:0;
+    " title="בחרי מנהלת">👑</button>
   </div>
 
   <div class="section-title">
@@ -690,6 +777,7 @@
 
 <!-- ===== SCREEN 4: DISTRIBUTION ===== -->
 <div id="screen-distribution" class="screen">
+  <div class="bg-image"></div>
   <div class="dist-header">
     <div class="dist-title">חלוקת פרקי תהילים</div>
     <button class="btn-back" id="btnBackFromDist">⟶ חזרה</button>
@@ -725,6 +813,57 @@
       </div>
     </div>
     <button class="btn-register" style="margin-top:16px; background: linear-gradient(135deg,#C9A84C,#E8C97A); color:#1A1035;" id="closeDetailModal">סגירה</button>
+  </div>
+</div>
+
+
+<!-- ===== EDIT MEMBER MODAL ===== -->
+<div class="modal-overlay" id="modalEditMember">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">עריכת פרטים ✏️</div>
+      <button class="modal-close" id="closeEditMember">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="input-group">
+        <div class="input-label">שם פרטי</div>
+        <input type="text" class="input-field" id="editFirstName" placeholder="שם פרטי">
+      </div>
+      <div class="input-group">
+        <div class="input-label">שם משפחה</div>
+        <input type="text" class="input-field" id="editLastName" placeholder="שם משפחה">
+      </div>
+      <div class="input-group">
+        <div class="input-label">מספר טלפון</div>
+        <input type="tel" class="input-field" id="editPhone" placeholder="050-0000000">
+      </div>
+      <div class="photo-upload" id="editPhotoUploadBtn">
+        <div class="photo-upload-icon">📷</div>
+        <div class="photo-upload-text">
+          <strong>החלפת תמונה</strong>
+          בחרי מהגלריה או צלמי תמונה
+        </div>
+      </div>
+      <input type="file" id="editPhotoFileInput" accept="image/*" capture="user" style="display:none">
+      <div class="avatar-section">
+        <div class="avatar-label">— או בחרי אווטאר —</div>
+        <div class="avatar-grid" id="editAvatarGrid"></div>
+      </div>
+      <button class="btn-register" id="btnSaveEdit">שמירה ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SELECT MANAGER MODAL ===== -->
+<div class="modal-overlay" id="modalSelectManager">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">👑 בחרי מנהלת</div>
+      <button class="modal-close" id="closeSelectManager">✕</button>
+    </div>
+    <div class="select-manager-list" id="selectManagerList"></div>
   </div>
 </div>
 
@@ -837,8 +976,30 @@ let state = {
   members: [],
   selectedForSession: new Set(),
   currentUser: null,
+  currentManager: null,
   userPhoto: null,
+  editingMember: null,
+  editPhoto: null,
+  editAvatarIdx: null,
 };
+
+// ===== LOCALSTORAGE =====
+function saveToStorage() {
+  localStorage.setItem('tehilim_members', JSON.stringify(state.members));
+  if (state.currentUser) localStorage.setItem('tehilim_currentUser', JSON.stringify(state.currentUser));
+  if (state.currentManager) localStorage.setItem('tehilim_manager', JSON.stringify(state.currentManager));
+}
+
+function loadFromStorage() {
+  try {
+    const members = localStorage.getItem('tehilim_members');
+    if (members) state.members = JSON.parse(members);
+    const user = localStorage.getItem('tehilim_currentUser');
+    if (user) state.currentUser = JSON.parse(user);
+    const manager = localStorage.getItem('tehilim_manager');
+    if (manager) state.currentManager = JSON.parse(manager);
+  } catch(e) { console.log('storage error', e); }
+}
 
 // ===== INIT =====
 function init() {
@@ -846,18 +1007,27 @@ function init() {
   renderAvatarGrid();
   setDateInfo();
   renderBookshelf();
+  loadFromStorage();
 
-  // Load mock members
-  state.members = [
-    { id: 1, firstName: 'שרה', lastName: 'כהן', phone: '050-1234567', avatarIdx: 0, photo: null },
-    { id: 2, firstName: 'רחל', lastName: 'לוי', phone: '052-2345678', avatarIdx: 1, photo: null },
-    { id: 3, firstName: 'מרים', lastName: 'דוד', phone: '054-3456789', avatarIdx: 2, photo: null },
-    { id: 4, firstName: 'דינה', lastName: 'מזרחי', phone: '058-4567890', avatarIdx: 3, photo: null },
-    { id: 5, firstName: 'לאה', lastName: 'אברהם', phone: '050-5678901', avatarIdx: 0, photo: null },
-    { id: 6, firstName: 'תמר', lastName: 'פרץ', phone: '052-6789012', avatarIdx: 1, photo: null },
-    { id: 7, firstName: 'רות', lastName: 'בן-דוד', phone: '054-7890123', avatarIdx: 2, photo: null },
-    { id: 8, firstName: 'אסתר', lastName: 'שלום', phone: '058-8901234', avatarIdx: 3, photo: null },
-  ];
+  // Demo members if none saved
+  if (state.members.length === 0) {
+    state.members = [
+      { id: 1, firstName: 'שרה', lastName: 'כהן', phone: '050-1234567', avatarIdx: 0, photo: null },
+      { id: 2, firstName: 'רחל', lastName: 'לוי', phone: '052-2345678', avatarIdx: 1, photo: null },
+      { id: 3, firstName: 'מרים', lastName: 'דוד', phone: '054-3456789', avatarIdx: 2, photo: null },
+      { id: 4, firstName: 'דינה', lastName: 'מזרחי', phone: '058-4567890', avatarIdx: 3, photo: null },
+      { id: 5, firstName: 'לאה', lastName: 'אברהם', phone: '050-5678901', avatarIdx: 0, photo: null },
+      { id: 6, firstName: 'תמר', lastName: 'פרץ', phone: '052-6789012', avatarIdx: 1, photo: null },
+      { id: 7, firstName: 'רות', lastName: 'בן-דוד', phone: '054-7890123', avatarIdx: 2, photo: null },
+      { id: 8, firstName: 'אסתר', lastName: 'שלום', phone: '058-8901234', avatarIdx: 3, photo: null },
+    ];
+  }
+
+  // Auto-login if user saved
+  if (state.currentUser) {
+    updateHomeCard(state.currentUser);
+    showScreen('screen-home');
+  }
 
   bindEvents();
 }
@@ -1014,6 +1184,41 @@ function bindEvents() {
   document.getElementById('closeDetailModal').addEventListener('click', () => {
     document.getElementById('modalMemberDetail').classList.remove('open');
   });
+
+  // Edit home card pencil
+  document.getElementById('btnEditHomeCard').addEventListener('click', () => {
+    if (state.currentUser) openEditModal(state.currentUser);
+  });
+
+  // Edit modal
+  document.getElementById('closeEditMember').addEventListener('click', () => {
+    document.getElementById('modalEditMember').classList.remove('open');
+  });
+  document.getElementById('btnSaveEdit').addEventListener('click', saveEdit);
+  document.getElementById('editPhotoUploadBtn').addEventListener('click', () => {
+    document.getElementById('editPhotoFileInput').click();
+  });
+  document.getElementById('editPhotoFileInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      state.editPhoto = ev.target.result;
+      state.editAvatarIdx = null;
+      document.getElementById('editAvatarGrid').querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+      showToast('✅ תמונה נטענה');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Select manager
+  document.getElementById('btnSelectManager').addEventListener('click', openSelectManager);
+  document.getElementById('closeSelectManager').addEventListener('click', () => {
+    document.getElementById('modalSelectManager').classList.remove('open');
+  });
+
+  // Exit manager
+  document.getElementById('btnExitManager').addEventListener('click', exitManager);
 }
 
 function doRegister() {
@@ -1026,6 +1231,7 @@ function doRegister() {
   const newMember = { id: Date.now(), firstName: fn, lastName: ln, phone: ph, avatarIdx, photo: state.userPhoto };
   state.members.push(newMember);
   state.currentUser = newMember;
+  saveToStorage();
 
   document.getElementById('modalRegister').classList.remove('open');
   updateHomeCard(newMember);
@@ -1046,6 +1252,7 @@ function updateHomeCard(member) {
 
 function enterManagerMode() {
   renderManagerList();
+  renderManagerCard();
   showScreen('screen-manager');
 }
 
@@ -1085,8 +1292,14 @@ function renderManagerList() {
       document.getElementById('selectedCount').textContent = state.selectedForSession.size;
     });
 
+    const pencilBtn = document.createElement('button');
+    pencilBtn.className = 'btn-edit-pencil';
+    pencilBtn.textContent = '✏️';
+    pencilBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditModal(m); });
+
     row.appendChild(avatarDiv);
     row.appendChild(nameDiv);
+    row.appendChild(pencilBtn);
     row.appendChild(circle);
     list.appendChild(row);
   });
@@ -1108,12 +1321,128 @@ function openMemberDetail(m) {
   document.getElementById('modalMemberDetail').classList.add('open');
 }
 
+// ===== EDIT MEMBER =====
+function openEditModal(member) {
+  state.editingMember = member;
+  state.editPhoto = member.photo;
+  state.editAvatarIdx = member.avatarIdx;
+
+  document.getElementById('editFirstName').value = member.firstName;
+  document.getElementById('editLastName').value = member.lastName;
+  document.getElementById('editPhone').value = member.phone || '';
+
+  // Render edit avatar grid
+  const grid = document.getElementById('editAvatarGrid');
+  grid.innerHTML = '';
+  AVATARS.forEach((svg, i) => {
+    const div = document.createElement('div');
+    div.className = 'avatar-option' + (i === member.avatarIdx ? ' selected' : '');
+    div.innerHTML = svg;
+    div.addEventListener('click', () => {
+      grid.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+      div.classList.add('selected');
+      state.editAvatarIdx = i;
+      state.editPhoto = null;
+    });
+    grid.appendChild(div);
+  });
+
+  document.getElementById('modalEditMember').classList.add('open');
+}
+
+function saveEdit() {
+  const m = state.editingMember;
+  if (!m) return;
+  const fn = document.getElementById('editFirstName').value.trim();
+  const ln = document.getElementById('editLastName').value.trim();
+  const ph = document.getElementById('editPhone').value.trim();
+  if (!fn || !ln) { showToast('⚠️ אנא מלאי שם ושם משפחה'); return; }
+
+  m.firstName = fn; m.lastName = ln; m.phone = ph;
+  m.avatarIdx = state.editAvatarIdx ?? m.avatarIdx;
+  m.photo = state.editPhoto;
+
+  // Update currentUser if it's the same person
+  if (state.currentUser && state.currentUser.id === m.id) {
+    state.currentUser = { ...m };
+    updateHomeCard(state.currentUser);
+  }
+  // Update manager if it's the same person
+  if (state.currentManager && state.currentManager.id === m.id) {
+    state.currentManager = { ...m };
+    renderManagerCard();
+  }
+
+  saveToStorage();
+  document.getElementById('modalEditMember').classList.remove('open');
+  renderManagerList();
+  showToast('✅ הפרטים עודכנו בהצלחה');
+}
+
+// ===== MANAGER SELECTION =====
+function openSelectManager() {
+  const list = document.getElementById('selectManagerList');
+  list.innerHTML = '';
+  state.members.forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'select-manager-row';
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'select-manager-avatar';
+    avatarDiv.innerHTML = m.photo
+      ? `<img src="${m.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+      : AVATARS[m.avatarIdx];
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'select-manager-name';
+    nameDiv.textContent = `${m.firstName} ${m.lastName}`;
+    row.appendChild(avatarDiv);
+    row.appendChild(nameDiv);
+    row.addEventListener('click', () => setManager(m));
+    list.appendChild(row);
+  });
+  document.getElementById('modalSelectManager').classList.add('open');
+}
+
+function setManager(member) {
+  state.currentManager = { ...member };
+  saveToStorage();
+  document.getElementById('modalSelectManager').classList.remove('open');
+  renderManagerCard();
+  showToast(`👑 ${member.firstName} נקבעה כמנהלת`);
+}
+
+function renderManagerCard() {
+  const wrap = document.getElementById('managerCardWrap');
+  if (!state.currentManager) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  const m = state.currentManager;
+  const avatarEl = document.getElementById('managerCardAvatar');
+  avatarEl.innerHTML = m.photo
+    ? `<img src="${m.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+    : AVATARS[m.avatarIdx];
+  document.getElementById('managerCardName').textContent = `${m.firstName} ${m.lastName}`;
+}
+
+function exitManager() {
+  state.currentManager = null;
+  localStorage.removeItem('tehilim_manager');
+  document.getElementById('managerCardWrap').style.display = 'none';
+  showToast('יצאת ממצב מנהלת');
+}
+
 function doSendChapters() {
   const selected = state.members.filter(m => state.selectedForSession.has(m.id));
   if (selected.length === 0) { showToast('⚠️ אנא בחרי מתפללות תחילה'); return; }
 
+  // הוסף מנהלת לחלוקה אם קיימת ולא נבחרה כבר
+  let allParticipants = [...selected];
+  if (state.currentManager && !state.selectedForSession.has(state.currentManager.id)) {
+    const managerMember = state.members.find(m => m.id === state.currentManager.id);
+    if (managerMember) allParticipants.unshift(managerMember);
+    else allParticipants.unshift(state.currentManager);
+  }
+
   const TOTAL = 150;
-  const perPerson = Math.ceil(TOTAL / selected.length);
+  const perPerson = Math.ceil(TOTAL / allParticipants.length);
 
   const distCards = document.getElementById('distCards');
   distCards.innerHTML = '';
@@ -1122,16 +1451,18 @@ function doSendChapters() {
   summary.innerHTML = `
     <div class="dist-summary-icon">📖</div>
     <div class="dist-summary-text">
-      <strong style="color:var(--gold-light);font-size:16px">${selected.length} מתפללות</strong><br>
-      150 פרקי תהילים — כ-${perPerson} פרקים לכל מתפללת
+      <strong style="color:var(--gold-light);font-size:16px">${allParticipants.length} משתתפות</strong><br>
+      150 פרקי תהילים — כ-${perPerson} פרקים לכל אחת
     </div>`;
 
-  selected.forEach((m, i) => {
+  allParticipants.forEach((m, i) => {
     const start = i * perPerson + 1;
     const end = Math.min((i + 1) * perPerson, TOTAL);
+    const isManager = state.currentManager && m.id === state.currentManager.id;
 
     const card = document.createElement('div');
     card.className = 'dist-card';
+    if (isManager) card.style.border = '2px solid rgba(201,168,76,0.5)';
 
     const avatarDiv = document.createElement('div');
     avatarDiv.className = 'dist-card-avatar';
@@ -1139,7 +1470,7 @@ function doSendChapters() {
 
     card.innerHTML = `
       <div class="dist-card-info">
-        <div class="dist-card-name">${m.firstName} ${m.lastName}</div>
+        <div class="dist-card-name">${isManager ? '👑 ' : ''}${m.firstName} ${m.lastName}</div>
         <div class="dist-card-chapters">פרקים <strong>${start}–${end}</strong> (${end-start+1} פרקים)</div>
       </div>
       <div class="dist-card-badge">פ' ${start}–${end}</div>`;
@@ -1149,7 +1480,7 @@ function doSendChapters() {
   });
 
   showScreen('screen-distribution');
-  showToast(`✅ חולקו 150 פרקים בין ${selected.length} מתפללות`);
+  showToast(`✅ חולקו 150 פרקים בין ${allParticipants.length} משתתפות`);
 }
 
 function showScreen(id) {
