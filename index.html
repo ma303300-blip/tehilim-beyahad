@@ -702,9 +702,17 @@
   <div class="bg-image"></div>
   <div class="home-top">
     <div class="bsd-top">בס"ד</div>
-    <div class="date-display">
-      <div class="date-day" id="homeDayName"></div>
-      <div class="date-full" id="homeDateFull"></div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="date-display">
+        <div class="date-day" id="homeDayName"></div>
+        <div class="date-full" id="homeDateFull"></div>
+      </div>
+      <button id="btnExitHome" style="
+        background:rgba(180,185,195,0.5); border:none; border-radius:10px;
+        padding:7px 12px; font-family:inherit; font-size:13px;
+        font-weight:700; color:var(--deep); cursor:pointer;
+        display:flex; align-items:center; gap:5px;
+      ">🚪 יציאה</button>
     </div>
   </div>
 
@@ -1232,6 +1240,14 @@ function bindEvents() {
     } else {
       showScreen('screen-welcome');
     }
+  });
+
+  // Home → exit (logout member)
+  document.getElementById('btnExitHome').addEventListener('click', () => {
+    state.currentUser = null;
+    localStorage.removeItem('tehilim_currentUser');
+    showScreen('screen-welcome');
+    showToast('יצאת בהצלחה');
   });
 }
 
