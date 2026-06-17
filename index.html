@@ -274,7 +274,7 @@
   }
 
   .member-card {
-    background: rgba(180,185,195,0.75);
+    background: rgba(180,185,195,0.90);
     backdrop-filter: blur(16px);
     border-radius: 24px;
     padding: 24px;
@@ -316,7 +316,7 @@
   .bookshelf-wrap { padding: 20px; margin-top: 96px; }
 
   .shelf-container {
-    background: rgba(180,185,195,0.75);
+    background: rgba(180,185,195,0.90);
     border-radius: 20px;
     padding: 16px 12px;
     box-shadow: 0 8px 30px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3);
@@ -374,7 +374,7 @@
   .members-list { padding: 16px 16px; display: flex; flex-direction: column; gap: 10px; }
 
   .member-row {
-    background: rgba(180,185,195,0.75);
+    background: rgba(180,185,195,0.90);
     border-radius: 14px;
     display: flex; align-items: center; gap: 10px;
     padding: 10px 12px;
@@ -461,7 +461,7 @@
   .dist-cards { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
 
   .dist-card {
-    background: rgba(180,185,195,0.75);
+    background: rgba(180,185,195,0.90);
     border-radius: 16px; padding: 14px 16px;
     display: flex; align-items: center; gap: 12px;
     box-shadow: 0 3px 12px rgba(0,0,0,0.1);
@@ -584,7 +584,7 @@
     padding: 14px 16px 0;
   }
   .manager-card {
-    background: rgba(180,185,195,0.75);
+    background: rgba(180,185,195,0.90);
     backdrop-filter: blur(16px);
     border-radius: 20px; padding: 14px 16px;
     display: flex; align-items: center; gap: 14px;
@@ -633,6 +633,15 @@
     text-align: center; padding: 12px;
     font-size: 12px; color: rgba(255,255,255,0.4);
     font-style: italic;
+  }
+
+  /* REFRESH BUTTON */
+  .btn-refresh {
+    position: fixed; bottom: 20px; left: 20px; z-index: 9999;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,255,255,0.85); border: none;
+    font-size: 20px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    display: flex; align-items: center; justify-content: center;
   }
 </style>
 </head>
@@ -708,7 +717,7 @@
         <div class="date-full" id="homeDateFull"></div>
       </div>
       <button id="btnExitHome" style="
-        background:rgba(180,185,195,0.75); border:none; border-radius:10px;
+        background:rgba(180,185,195,0.90); border:none; border-radius:10px;
         padding:7px 12px; font-family:inherit; font-size:13px;
         font-weight:700; color:var(--deep); cursor:pointer;
         display:flex; align-items:center; gap:5px;
@@ -747,7 +756,7 @@
         <div class="date-full" id="mgDateFull"></div>
       </div>
       <button id="btnManagerToHome" style="
-        background:rgba(180,185,195,0.75); border:none; border-radius:10px;
+        background:rgba(180,185,195,0.90); border:none; border-radius:10px;
         padding:7px 12px; font-family:inherit; font-size:13px;
         font-weight:700; color:var(--deep); cursor:pointer;
         display:flex; align-items:center; gap:5px;
@@ -1597,6 +1606,19 @@ init();
     }
   });
 
+  // Refresh button — clears SW cache and reloads
+  document.getElementById('btnRefresh').addEventListener('click', () => {
+    if ('serviceWorker' in navigator) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+        location.reload(true);
+      });
+    } else {
+      location.reload(true);
+    }
+  });
+
   // Prevent pull-to-refresh on Android (but allow normal downward scroll)
   let _touchStartY = 0;
   document.body.addEventListener('touchstart', function(e) {
@@ -1612,6 +1634,9 @@ init();
     }
   }, { passive: false });
 </script>
+
+<!-- REFRESH BUTTON -->
+<button class="btn-refresh" id="btnRefresh" title="רענון">🔄</button>
 
 <!-- ===== INSTALL BANNER (iOS + Android) ===== -->
 <div id="installBanner" style="
