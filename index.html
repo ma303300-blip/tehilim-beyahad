@@ -66,8 +66,9 @@
   /* ===== WELCOME SCREEN ===== */
   #screen-welcome {
     background: transparent;
-    align-items: center; justify-content: center;
-    padding: 30px 20px;
+    align-items: center; justify-content: flex-end;
+    padding: 0 20px 100px;
+    min-height: 100vh;
   }
 
   .welcome-stars {
@@ -86,6 +87,11 @@
   .welcome-inner {
     display: flex; flex-direction: column; align-items: center;
     gap: 20px; width: 100%; max-width: 380px; position: relative; z-index: 1;
+  }
+
+  .welcome-bottom-btns {
+    width: 100%;
+    display: flex; flex-direction: column; gap: 12px;
   }
 
   .bsd-welcome {
@@ -142,12 +148,12 @@
   .btn-manager:active { transform: scale(0.97); }
 
   .btn-member {
-    background: rgba(255,255,255,0.1);
-    color: var(--white);
-    border: 1.5px solid rgba(255,255,255,0.25);
+    background: rgba(150,150,150,0.5);
+    color: var(--deep);
+    border: none;
     backdrop-filter: blur(10px);
   }
-  .btn-member:active { transform: scale(0.97); background: rgba(255,255,255,0.18); }
+  .btn-member:active { transform: scale(0.97); background: rgba(150,150,150,0.65); }
 
   .btn-icon { font-size: 20px; }
 
@@ -307,7 +313,7 @@
   }
 
   /* BOOKSHELF */
-  .bookshelf-wrap { padding: 20px; margin-top: 48px; }
+  .bookshelf-wrap { padding: 20px; margin-top: 96px; }
 
   .shelf-container {
     background: rgba(180,185,195,0.85);
@@ -634,19 +640,13 @@
 <div id="screen-welcome" class="screen active">
   <div class="bg-image"></div>
   <div class="welcome-stars" id="starsContainer"></div>
-  <div class="welcome-inner">
-    <div class="bsd-welcome">בס"ד</div>
-    <div class="app-logo">📖</div>
-    <div class="app-title">תהילים ביחד</div>
-    <div class="app-subtitle">לימוד תהילים בשיתוף ובאהבה</div>
-    <div class="divider-gold"></div>
+  <div class="welcome-bottom-btns">
     <button class="welcome-btn btn-manager" id="btnManagerWelcome">
       <span class="btn-icon">👑</span> כניסת מנהלת קבוצה
     </button>
     <button class="welcome-btn btn-member" id="btnMemberRegister">
       <span class="btn-icon">✨</span> רישום מתפללת
     </button>
-    <div class="manager-hint">לכניסת מנהלת — לחצי לחיצה ארוכה 3 שניות</div>
   </div>
 </div>
 
