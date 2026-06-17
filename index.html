@@ -2,8 +2,32 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>תהילים ביחד</title>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Theme color - Android Chrome -->
+<meta name="theme-color" content="#1A1035">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- iOS Safari PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="תהילים ביחד">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="120x120" href="icon-120.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+
+<!-- iOS Splash screens -->
+<meta name="apple-touch-fullscreen" content="yes">
+
+<!-- General -->
+<meta name="application-name" content="תהילים ביחד">
+<meta name="description" content="לימוד תהילים בשיתוף ובאהבה">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;500;700;900&family=Heebo:wght@300;400;500;700&display=swap');
 
@@ -1142,6 +1166,32 @@ function showToast(msg) {
 }
 
 init();
+</script>
+
+<!-- PWA Service Worker Registration -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('SW registered'))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
+
+  // iOS PWA: fix 100vh
+  function setVH() {
+    document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+  }
+  setVH();
+  window.addEventListener('resize', setVH);
+
+  // Prevent pull-to-refresh on Android
+  document.body.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 1) {
+      var el = e.target.closest('.screen');
+      if (el && el.scrollTop === 0) e.preventDefault();
+    }
+  }, { passive: false });
 </script>
 </body>
 </html>
