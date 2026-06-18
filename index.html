@@ -867,14 +867,6 @@
   }
   .my-chapters-count { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; }
 
-  /* REFRESH BUTTON */
-  .btn-refresh {
-    position: fixed; bottom: 20px; left: 20px; z-index: 9999;
-    width: 44px; height: 44px; border-radius: 50%;
-    background: rgba(255,255,255,0.85); border: none;
-    font-size: 20px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    display: flex; align-items: center; justify-content: center;
-  }
 </style>
 </head>
 <body>
@@ -2529,11 +2521,6 @@ window.addEventListener('load', init);
     // Android: banner shows only after beforeinstallprompt fires and sets deferredPrompt
   });
 
-  // Refresh button — simple page reload without clearing session
-  document.getElementById('btnRefresh').addEventListener('click', () => {
-    location.reload();
-  });
-
   // Prevent pull-to-refresh on Android (but allow normal downward scroll)
   let _touchStartY = 0;
   document.body.addEventListener('touchstart', function(e) {
@@ -2550,8 +2537,6 @@ window.addEventListener('load', init);
   }, { passive: false });
 </script>
 
-<!-- REFRESH BUTTON -->
-<button class="btn-refresh" id="btnRefresh" title="רענון">🔄</button>
 
 <!-- ===== INSTALL BANNER (iOS + Android) ===== -->
 <div id="installBanner" style="
