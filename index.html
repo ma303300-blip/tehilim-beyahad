@@ -2636,17 +2636,85 @@ function fbLoadAssignments() {
     .catch(e => { console.warn('fbLoadAssignments', e); return null; });
 }
 
+function flyBooksToShelf(count) {
+  const cardEl  = document.querySelector('.floating-card-wrap');
+  const shelfEl = document.querySelector('.bookshelf-wrap');
+  if (!cardEl || !shelfEl) return;
+
+  const from = cardEl.getBoundingClientRect();
+  const to   = shelfEl.getBoundingClientRect();
+
+  const total   = Math.min(count, 14);
+  const fromX   = from.left + from.width  / 2;
+  const fromY   = from.top  + from.height / 2;
+  const COLORS  = ['#8B4513','#5C3317','#6B2D0E','#7A3B1E','#4A2208'];
+  const ACCENTS = ['#C9A84C','#E8C97A','#B8902A','#D4A840','#C0963C'];
+
+  for (let i = 0; i < total; i++) {
+    setTimeout(() => {
+      const col = i % COLORS.length;
+      const el  = document.createElement('div');
+      el.style.cssText = `
+        position:fixed;
+        left:${fromX}px; top:${fromY}px;
+        width:22px; height:30px;
+        background:${COLORS[col]};
+        border-radius:2px 5px 5px 2px;
+        border-right:4px solid ${ACCENTS[col]};
+        border-left:2px solid rgba(0,0,0,0.25);
+        box-shadow:inset -3px 0 6px rgba(0,0,0,0.3), 2px 3px 10px rgba(0,0,0,0.4);
+        transform:translate(-50%,-50%) scale(0.12) rotate(${-15+Math.random()*30}deg);
+        z-index:8000; pointer-events:none; will-change:transform,left,top;
+        transition:
+          left   0.75s cubic-bezier(0.25,0.46,0.45,0.94),
+          top    0.75s cubic-bezier(0.55,0,1,0.45),
+          transform 0.75s cubic-bezier(0.34,1.4,0.64,1);
+      `;
+      document.body.appendChild(el);
+
+      const destX = to.left + 24 + (i % 5) * ((to.width - 48) / 4) + (Math.random() - 0.5) * 8;
+      const destY = to.top  + 20 + Math.floor(i / 5) * 50;
+
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        el.style.left      = `${destX}px`;
+        el.style.top       = `${destY}px`;
+        el.style.transform = 'translate(-50%,-50%) scale(1) rotate(0deg)';
+      }));
+
+      setTimeout(() => {
+        el.style.transition = 'opacity 0.3s';
+        el.style.opacity    = '0';
+        setTimeout(() => el.remove(), 350);
+      }, 780);
+    }, i * 160);
+  }
+}
+
 function fbListenAssignments() {
   if (!window.db) return;
+  let _firstAssignSnap = true;
   window.db.collection('sessions').doc('current').onSnapshot(snap => {
     setSyncStatus('ok');
     if (!snap.exists) return;
     const fbA = snap.data().assignments;
     if (!fbA) return;
+
+    const hadAssignment = state.currentUser && !!state.assignments[state.currentUser.id];
     state.assignments = fbA;
     saveToStorage();
+
+    const hasAssignment = state.currentUser && !!state.assignments[state.currentUser.id];
+    const isFirstTime   = !_firstAssignSnap === false || !hadAssignment;
+    _firstAssignSnap = false;
+
     if (state.currentUser) updateAssignmentDisplay();
     renderBookshelf();
+
+    // הנפשה רק כשמגיעים פרקים לראשונה (לא בטעינה ולא אחרי איפוס)
+    if (hasAssignment && !hadAssignment && document.querySelector('#screen-home.active')) {
+      const a = state.assignments[state.currentUser.id];
+      setTimeout(() => flyBooksToShelf(a.end - a.start + 1), 400);
+    }
   }, e => { console.warn('fbListenAssignments', e); setSyncStatus('err'); });
 }
 
