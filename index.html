@@ -2471,18 +2471,20 @@ window.addEventListener('load', init);
     }
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js').then(reg => {
-        // SW ממתין כבר — הפעל מיידית
         activateWaiting(reg);
-        // SW חדש מתקין — הפעל מיידית כשיסיים
         reg.addEventListener('updatefound', () => {
           const w = reg.installing;
           w.addEventListener('statechange', () => {
             if (w.state === 'installed') activateWaiting(reg);
           });
         });
+        // בדוק עדכון בכל חזרה לאפליקציה
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) reg.update();
+        });
       }).catch(err => console.log('SW error:', err));
     });
-    // כשה-SW מתחלף — טען מחדש (לא במהלך ניקוי ידני)
+    // כשה-SW מתחלף — טען מחדש אוטומטית
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!_clearingCache) window.location.reload();
     });
