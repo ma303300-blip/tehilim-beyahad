@@ -1408,6 +1408,30 @@ function lighten(hex) {
   return `rgb(${Math.min(255,r+30)},${Math.min(255,g+30)},${Math.min(255,b+30)})`;
 }
 
+// ===== NAVIGATION BACK =====
+function goBack() {
+  if (_navStack.length <= 1) {
+    document.getElementById('exitOverlay').classList.add('open');
+    return;
+  }
+  const current = document.querySelector('.screen.active')?.id;
+  if (current === 'screen-reader') stopAutoScroll();
+  _navStack.pop();
+  const target = _navStack[_navStack.length - 1];
+  if (target === 'screen-home' && state.currentUser) {
+    updateHomeCard(state.currentUser);
+    updateAssignmentDisplay();
+  } else if (target === 'screen-manager' && state.currentManager) {
+    renderManagerList();
+    renderManagerCard();
+  }
+  _navFromHistory = true;
+  showScreen(target);
+  _navFromHistory = false;
+  _handledByApp = true;
+  history.back();
+}
+
 // ===== BINDING =====
 function bindEvents() {
   // Welcome → Register
@@ -1491,10 +1515,7 @@ function bindEvents() {
   document.getElementById('btnResetChapters').addEventListener('click', doResetChapters);
 
   // Back from reader
-  document.getElementById('btnBackFromReader').addEventListener('click', () => {
-    stopAutoScroll();
-    history.back();
-  });
+  document.getElementById('btnBackFromReader').addEventListener('click', goBack);
 
   // Font size controls
   document.getElementById('btnFontPlus').addEventListener('click', () => {
@@ -1517,9 +1538,7 @@ function bindEvents() {
   // Wake controls on reader touch/scroll
   document.getElementById('screen-reader').addEventListener('touchstart', wakeControls, { passive: true });
 
-  document.getElementById('btnBackFromDist').addEventListener('click', () => {
-    history.back();
-  });
+  document.getElementById('btnBackFromDist').addEventListener('click', goBack);
 
   // Close member detail
   document.getElementById('closeDetailModal').addEventListener('click', () => {
@@ -1562,14 +1581,10 @@ function bindEvents() {
   document.getElementById('btnExitManager').addEventListener('click', exitManager);
 
   // Manager → back to home/welcome
-  document.getElementById('btnManagerToHome').addEventListener('click', () => {
-    history.back();
-  });
+  document.getElementById('btnManagerToHome').addEventListener('click', goBack);
 
   // Home → back to welcome (without clearing user data)
-  document.getElementById('btnExitHome').addEventListener('click', () => {
-    history.back();
-  });
+  document.getElementById('btnExitHome').addEventListener('click', goBack);
 
   // Bookshelf → open all assigned chapters
   document.querySelector('#screen-home .bookshelf-wrap').addEventListener('click', showAllChapters);
@@ -1587,6 +1602,12 @@ function bindEvents() {
 
   // Hardware back button
   window.addEventListener('popstate', () => {
+    // In-app goBack() already handled the navigation — just re-push and return
+    if (_handledByApp) {
+      _handledByApp = false;
+      history.pushState({ depth: _navStack.length }, '', '#' + (_navStack[_navStack.length - 1] || 'screen-welcome'));
+      return;
+    }
     // At root — show exit dialog and re-push to stay
     if (_navStack.length <= 1) {
       history.pushState({ depth: 1 }, '', '#screen-welcome');
@@ -1666,6 +1687,7 @@ let fontFadeTimer = null;
 let scrollInterval = null;
 let scrollPaused = false;
 let _navFromHistory = false;
+let _handledByApp = false;
 const _navStack = ['screen-welcome']; // tracks navigation for hardware back button
 
 function applyFontSize() {
