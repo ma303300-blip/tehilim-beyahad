@@ -2777,7 +2777,18 @@ function fbListenAssignments() {
   if (!window.db) return;
   window.db.collection('sessions').doc('current').onSnapshot(snap => {
     setSyncStatus('ok');
-    if (!snap.exists) return;
+    if (!snap.exists) {
+      // המנהלת אפסה את המפגש — נקה סטטוס הצטרפות מקומי
+      if (state.currentUser) {
+        localStorage.removeItem(joinTodayKey() + '_' + state.currentUser.id);
+        updateJoinButton();
+      }
+      state.assignments = {};
+      saveToStorage();
+      if (state.currentUser) updateAssignmentDisplay();
+      renderBookshelf();
+      return;
+    }
     const data = snap.data();
     if (!data || !data.assignments) return;
 
