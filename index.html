@@ -346,19 +346,15 @@
 
   .bookcase-wrap {
     position: relative;
-    width: 100%;
-    max-width: 310px;
+    width: 260px;
     margin: 0 auto;
     cursor: pointer;
-    border-radius: 10px;
-    overflow: hidden;
   }
 
   .bookcase-img {
-    width: 100%; display: block;
+    width: 260px; display: block;
     position: absolute; top: 0; left: 0;
     transition: opacity 0.55s ease;
-    border-radius: 10px;
   }
   #bookcaseClosed { position: relative; opacity: 1; z-index: 2; }
   #bookcaseOpen   { opacity: 0; z-index: 1; }
@@ -370,26 +366,27 @@
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
     z-index: 4; pointer-events: none;
+    overflow: hidden;
   }
   .bookcase-wrap.open #bookshelfRows { pointer-events: auto; }
 
   .shelf-row {
     position: absolute;
-    left: 13%; right: 10%;
+    left: 11%; right: 8%;
     display: flex;
     align-items: flex-end;
     justify-content: flex-start;
-    gap: 4px;
+    gap: 3px;
   }
-  /* שלוש המדפים — מיקום לפי גובה תמונת הארון הפתוח */
-  .shelf-row:nth-child(1) { top: 36%; }
-  .shelf-row:nth-child(2) { top: 56%; }
-  .shelf-row:nth-child(3) { top: 75%; }
+  /* מיקום מדפים — לכוונן לפי מיקום בתמונה */
+  .shelf-row:nth-child(1) { top: 20%; }
+  .shelf-row:nth-child(2) { top: 47%; }
+  .shelf-row:nth-child(3) { top: 72%; }
 
   .book {
     flex: none;
-    width: 46px;
-    border-radius: 3px 3px 0 0;
+    width: 36px;
+    border-radius: 2px 2px 0 0;
     cursor: pointer;
     transition: transform 0.18s ease;
     position: relative;
@@ -397,24 +394,24 @@
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center top;
-    box-shadow: 2px 4px 10px rgba(0,0,0,0.7);
+    box-shadow: 1px 3px 8px rgba(0,0,0,0.7);
   }
-  .book:active { transform: translateY(-5px); }
+  .book:active { transform: translateY(-4px); }
 
   .book-ch {
     position: absolute;
-    bottom: 6px; left: 0; right: 0;
+    bottom: 4px; left: 0; right: 0;
     text-align: center;
     font-family: 'Frank Ruhl Libre', serif;
-    font-size: 10px; font-weight: 900;
+    font-size: 8px; font-weight: 900;
     color: #FFD760;
     text-shadow: 0 1px 3px rgba(0,0,0,0.95);
     line-height: 1;
   }
 
-  .book-h-tall  { height: 82px; }
-  .book-h-mid   { height: 70px; }
-  .book-h-short { height: 58px; }
+  .book-h-tall  { height: 62px; }
+  .book-h-mid   { height: 52px; }
+  .book-h-short { height: 44px; }
 
   /* MANAGER SCREEN */
   #screen-manager {
@@ -1017,8 +1014,8 @@
 
   <div class="bookshelf-wrap">
     <div class="bookcase-wrap" id="bookcaseWrap">
-      <img id="bookcaseClosed" class="bookcase-img" src="bookcase-closed.jpg" alt="ספרייה סגורה">
-      <img id="bookcaseOpen"   class="bookcase-img" src="bookcase-open.jpg"   alt="ספרייה פתוחה">
+      <img id="bookcaseClosed" class="bookcase-img" src="bookcase-closed.png" alt="ספרייה סגורה">
+      <img id="bookcaseOpen"   class="bookcase-img" src="bookcase-open.png"   alt="ספרייה פתוחה">
       <div id="bookshelfRows"></div>
     </div>
   </div>
