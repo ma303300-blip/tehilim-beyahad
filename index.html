@@ -638,6 +638,34 @@
     font-style: italic;
   }
 
+  /* READER SCREEN */
+  #screen-reader { overflow-y: auto; padding-bottom: 40px; }
+  .reader-header {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px;
+    background: rgba(180,185,195,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    direction: rtl;
+  }
+  .reader-title {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 20px; font-weight: 700; color: var(--deep); flex: 1;
+  }
+  .reader-content { padding: 20px; direction: rtl; }
+  .reader-verse {
+    display: flex; gap: 10px; margin-bottom: 18px; align-items: flex-start;
+  }
+  .reader-verse-num {
+    font-size: 11px; font-weight: 700; color: var(--gold);
+    min-width: 22px; padding-top: 5px; flex-shrink: 0; text-align: center;
+  }
+  .reader-verse-text {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 20px; line-height: 1.8; color: var(--deep);
+  }
+
   /* CHAPTER PARTICLE ANIMATION */
   .chapter-particle {
     position: fixed; font-size: 22px; pointer-events: none; z-index: 99999;
@@ -875,6 +903,16 @@
   <div class="dist-cards" id="distCards"></div>
 </div>
 
+<!-- ===== SCREEN 5: CHAPTER READER ===== -->
+<div id="screen-reader" class="screen">
+  <div class="bg-image"></div>
+  <div class="reader-header">
+    <button class="btn-back" id="btnBackFromReader">⟶ חזרה</button>
+    <div class="reader-title" id="readerTitle">תהילים א</div>
+  </div>
+  <div class="reader-content" id="readerContent"></div>
+</div>
+
 <!-- ===== MEMBER DETAIL MODAL ===== -->
 <div class="modal-overlay" id="modalMemberDetail">
   <div class="member-detail-card">
@@ -1065,6 +1103,7 @@ let state = {
   currentUser: null,
   currentManager: null,
   assignments: {},
+  tehilim: null,
   userPhoto: null,
   editingMember: null,
   editPhoto: null,
@@ -1099,6 +1138,11 @@ function init() {
   setDateInfo();
   renderBookshelf();
   loadFromStorage();
+
+  fetch('./psalms_hebrew.json')
+    .then(r => r.json())
+    .then(data => { state.tehilim = data; })
+    .catch(() => console.log('Psalms text not available'));
 
   // Demo members if none saved
   if (state.members.length === 0) {
@@ -1212,8 +1256,9 @@ function renderBookshelf() {
         const colorSet = BOOK_COLORS[(r * 3 + b) % BOOK_COLORS.length];
         const color = colorSet[b % colorSet.length];
         book.className = `book book-h-tall`;
-        book.style.cssText = `background:linear-gradient(180deg,${lighten(color)},${color}); min-width:36px; flex:none;`;
+        book.style.cssText = `background:linear-gradient(180deg,${lighten(color)},${color}); min-width:36px; flex:none; cursor:pointer;`;
         book.innerHTML = `<div class="book-spine" style="font-size:7.5px; line-height:1.4;">תהילים<br><span style="font-size:12px; font-weight:900;">${toHebNum(ch)}</span></div>`;
+        book.addEventListener('click', () => showChapter(ch - 1));
         rowEl.appendChild(book);
       });
       wrap.appendChild(rowEl);
@@ -1330,6 +1375,10 @@ function bindEvents() {
   document.getElementById('btnResetChapters').addEventListener('click', doResetChapters);
 
   // Back from distribution
+  document.getElementById('btnBackFromReader').addEventListener('click', () => {
+    showScreen('screen-home');
+  });
+
   document.getElementById('btnBackFromDist').addEventListener('click', () => {
     showScreen('screen-manager');
   });
@@ -1419,6 +1468,24 @@ function updateHomeCard(member) {
   } else {
     avatarEl.innerHTML = AVATARS[member.avatarIdx];
   }
+}
+
+function showChapter(chIdx) {
+  if (!state.tehilim) { showToast('טוען טקסט... נסי שוב'); return; }
+  const verses = state.tehilim[chIdx];
+  if (!verses) return;
+  document.getElementById('readerTitle').textContent = `תהילים ${toHebNum(chIdx + 1)}`;
+  const content = document.getElementById('readerContent');
+  content.innerHTML = '';
+  verses.forEach((text, i) => {
+    const row = document.createElement('div');
+    row.className = 'reader-verse';
+    row.innerHTML = `
+      <div class="reader-verse-num">${toHebNum(i + 1)}</div>
+      <div class="reader-verse-text">${text}</div>`;
+    content.appendChild(row);
+  });
+  showScreen('screen-reader');
 }
 
 function updateAssignmentDisplay() {
