@@ -635,6 +635,35 @@
     font-style: italic;
   }
 
+  /* CHAPTER PARTICLE ANIMATION */
+  .chapter-particle {
+    position: fixed; font-size: 22px; pointer-events: none; z-index: 99999;
+    transition: left 1.1s cubic-bezier(0.4,0,0.2,1), top 1.1s cubic-bezier(0.4,0,0.2,1), opacity 1.1s, transform 1.1s;
+  }
+
+  /* CHAPTER BADGE IN MEMBER ROW */
+  .chapter-badge {
+    display: inline-block; margin-top: 4px;
+    background: linear-gradient(135deg, var(--gold-pale), #fff8dc);
+    color: var(--deep); font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+    border: 1px solid rgba(201,168,76,0.4);
+  }
+
+  /* MY CHAPTERS CARD ON HOME SCREEN */
+  .my-chapters-card {
+    margin: 0 20px 16px; padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(201,168,76,0.3), rgba(232,201,122,0.2));
+    border-radius: 18px; border: 1.5px solid rgba(201,168,76,0.5);
+    text-align: center; display: none;
+  }
+  .my-chapters-title { font-size: 13px; color: var(--soft); margin-bottom: 4px; }
+  .my-chapters-range {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 24px; font-weight: 700; color: var(--deep);
+  }
+  .my-chapters-count { font-size: 12px; color: var(--soft); margin-top: 2px; }
+
   /* REFRESH BUTTON */
   .btn-refresh {
     position: fixed; bottom: 20px; left: 20px; z-index: 9999;
@@ -758,6 +787,12 @@
       </div>
       <button class="btn-edit-pencil" id="btnEditHomeCard" title="עריכה">✏️</button>
     </div>
+  </div>
+
+  <div class="my-chapters-card" id="myChaptersCard">
+    <div class="my-chapters-title">📖 הפרקים שלי</div>
+    <div class="my-chapters-range" id="myChaptersRange"></div>
+    <div class="my-chapters-count" id="myChaptersCount"></div>
   </div>
 
   <div class="bookshelf-wrap">
@@ -1021,6 +1056,7 @@ let state = {
   selectedForSession: new Set(),
   currentUser: null,
   currentManager: null,
+  assignments: {},
   userPhoto: null,
   editingMember: null,
   editPhoto: null,
@@ -1032,6 +1068,7 @@ function saveToStorage() {
   localStorage.setItem('tehilim_members', JSON.stringify(state.members));
   if (state.currentUser) localStorage.setItem('tehilim_currentUser', JSON.stringify(state.currentUser));
   if (state.currentManager) localStorage.setItem('tehilim_manager', JSON.stringify(state.currentManager));
+  localStorage.setItem('tehilim_assignments', JSON.stringify(state.assignments));
 }
 
 function loadFromStorage() {
@@ -1042,6 +1079,8 @@ function loadFromStorage() {
     if (user) state.currentUser = JSON.parse(user);
     const manager = localStorage.getItem('tehilim_manager');
     if (manager) state.currentManager = JSON.parse(manager);
+    const assignments = localStorage.getItem('tehilim_assignments');
+    if (assignments) state.assignments = JSON.parse(assignments);
   } catch(e) { console.log('storage error', e); }
 }
 
@@ -1067,9 +1106,15 @@ function init() {
     ];
   }
 
-  // Auto-login if user saved
-  if (state.currentUser) {
+  // Restore last screen
+  const lastScreen = sessionStorage.getItem('lastScreen');
+  if (lastScreen === 'screen-manager' && state.currentManager) {
+    renderManagerList();
+    renderManagerCard();
+    showScreen('screen-manager');
+  } else if (state.currentUser) {
     updateHomeCard(state.currentUser);
+    updateAssignmentDisplay();
     showScreen('screen-home');
   }
 
@@ -1177,6 +1222,7 @@ function bindEvents() {
   document.getElementById('btnEnterFromLogin').addEventListener('click', () => {
     document.getElementById('modalMemberLogin').classList.remove('open');
     updateHomeCard(state.currentUser);
+    updateAssignmentDisplay();
     showScreen('screen-home');
   });
 
@@ -1288,6 +1334,7 @@ function bindEvents() {
   document.getElementById('btnManagerToHome').addEventListener('click', () => {
     if (state.currentUser) {
       updateHomeCard(state.currentUser);
+      updateAssignmentDisplay();
       showScreen('screen-home');
     } else {
       showScreen('screen-welcome');
@@ -1314,6 +1361,7 @@ function doRegister() {
 
   document.getElementById('modalRegister').classList.remove('open');
   updateHomeCard(newMember);
+  updateAssignmentDisplay();
   showScreen('screen-home');
   showToast(`ברוכה הבאה, ${fn}! 🌟`);
 }
@@ -1326,6 +1374,19 @@ function updateHomeCard(member) {
     avatarEl.innerHTML = `<img src="${member.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
   } else {
     avatarEl.innerHTML = AVATARS[member.avatarIdx];
+  }
+}
+
+function updateAssignmentDisplay() {
+  const card = document.getElementById('myChaptersCard');
+  if (!card || !state.currentUser) return;
+  const a = state.assignments[state.currentUser.id];
+  if (a) {
+    document.getElementById('myChaptersRange').textContent = `פרקים ${a.start}–${a.end}`;
+    document.getElementById('myChaptersCount').textContent = `${a.end - a.start + 1} פרקים`;
+    card.style.display = 'block';
+  } else {
+    card.style.display = 'none';
   }
 }
 
@@ -1366,6 +1427,7 @@ function renderManagerList() {
   state.members.forEach((m, idx) => {
     const row = document.createElement('div');
     row.className = 'member-row';
+    row.dataset.id = m.id;
     row.style.background = ROW_COLORS[idx % ROW_COLORS.length];
 
     const avatarDiv = document.createElement('div');
@@ -1379,7 +1441,9 @@ function renderManagerList() {
 
     const nameDiv = document.createElement('div');
     nameDiv.className = 'member-row-name';
-    nameDiv.innerHTML = `<strong>${m.firstName} ${m.lastName}</strong><span>${m.phone || ''}</span>`;
+    const assignment = state.assignments[m.id];
+    const chapterBadge = assignment ? `<span class="chapter-badge">📖 פרקים ${assignment.start}–${assignment.end}</span>` : '';
+    nameDiv.innerHTML = `<strong>${m.firstName} ${m.lastName}</strong><span>${m.phone || ''}</span>${chapterBadge}`;
 
     const circle = document.createElement('div');
     circle.className = 'member-select-circle';
@@ -1536,7 +1600,6 @@ function doSendChapters() {
   const selected = state.members.filter(m => state.selectedForSession.has(m.id));
   if (selected.length === 0) { showToast('⚠️ אנא בחרי מתפללות תחילה'); return; }
 
-  // הוסף מנהלת לחלוקה אם קיימת ולא נבחרה כבר
   let allParticipants = [...selected];
   if (state.currentManager && !state.selectedForSession.has(state.currentManager.id)) {
     const managerMember = state.members.find(m => m.id === state.currentManager.id);
@@ -1547,49 +1610,63 @@ function doSendChapters() {
   const TOTAL = 150;
   const perPerson = Math.ceil(TOTAL / allParticipants.length);
 
-  const distCards = document.getElementById('distCards');
-  distCards.innerHTML = '';
-
-  const summary = document.getElementById('distSummary');
-  summary.innerHTML = `
-    <div class="dist-summary-icon">📖</div>
-    <div class="dist-summary-text">
-      <strong style="color:var(--gold-light);font-size:16px">${allParticipants.length} משתתפות</strong><br>
-      150 פרקי תהילים — כ-${perPerson} פרקים לכל אחת
-    </div>`;
-
+  // שמור חלוקה
+  state.assignments = {};
   allParticipants.forEach((m, i) => {
     const start = i * perPerson + 1;
     const end = Math.min((i + 1) * perPerson, TOTAL);
-    const isManager = state.currentManager && m.id === state.currentManager.id;
-
-    const card = document.createElement('div');
-    card.className = 'dist-card';
-    if (isManager) card.style.border = '2px solid rgba(201,168,76,0.5)';
-
-    const avatarDiv = document.createElement('div');
-    avatarDiv.className = 'dist-card-avatar';
-    avatarDiv.innerHTML = m.photo ? `<img src="${m.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : AVATARS[m.avatarIdx];
-
-    card.innerHTML = `
-      <div class="dist-card-info">
-        <div class="dist-card-name">${isManager ? '👑 ' : ''}${m.firstName} ${m.lastName}</div>
-        <div class="dist-card-chapters">פרקים <strong>${start}–${end}</strong> (${end-start+1} פרקים)</div>
-      </div>
-      <div class="dist-card-badge">פ' ${start}–${end}</div>`;
-
-    card.insertBefore(avatarDiv, card.firstChild);
-    distCards.appendChild(card);
+    state.assignments[m.id] = { start, end };
   });
+  saveToStorage();
 
-  showScreen('screen-distribution');
-  showToast(`✅ חולקו 150 פרקים בין ${allParticipants.length} משתתפות`);
+  // אנימציה ואז עדכון הרשימה
+  animateSendChapters(allParticipants, () => {
+    renderManagerList();
+    showToast(`✅ חולקו 150 פרקים בין ${allParticipants.length} משתתפות`);
+  });
+}
+
+function animateSendChapters(participants, onComplete) {
+  const btn = document.getElementById('btnSendChapters');
+  const btnRect = btn.getBoundingClientRect();
+  const startX = btnRect.left + btnRect.width / 2;
+  const startY = btnRect.top + btnRect.height / 2;
+
+  let done = 0;
+  participants.forEach((m, i) => {
+    setTimeout(() => {
+      const row = document.querySelector(`.member-row[data-id="${m.id}"]`);
+      const tr = row ? row.getBoundingClientRect() : { left: startX, top: startY + 100, width: 0, height: 0 };
+      const targetX = tr.left + tr.width / 2;
+      const targetY = tr.top + tr.height / 2;
+
+      const p = document.createElement('div');
+      p.className = 'chapter-particle';
+      p.textContent = '📖';
+      p.style.cssText = `left:${startX}px; top:${startY}px; transform:scale(1);`;
+      document.body.appendChild(p);
+
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        p.style.left = targetX + 'px';
+        p.style.top = targetY + 'px';
+        p.style.opacity = '0';
+        p.style.transform = 'scale(0.3)';
+      }));
+
+      setTimeout(() => {
+        p.remove();
+        done++;
+        if (done === participants.length) onComplete();
+      }, 1200);
+    }, i * 180);
+  });
 }
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
+  sessionStorage.setItem('lastScreen', id);
   if (id === 'screen-welcome') {
     const btn = document.getElementById('btnMemberRegister');
     if (state.currentUser) {
