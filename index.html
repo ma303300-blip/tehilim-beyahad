@@ -1121,6 +1121,24 @@
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<!-- ===== PHOTO PICKER SHEET ===== -->
+<div id="photoPickerSheet" style="
+  position:fixed; inset:0; z-index:10001;
+  display:none; align-items:flex-end;
+  background:rgba(0,0,0,0.45);
+">
+  <div style="
+    background:#fff; border-radius:22px 22px 0 0;
+    width:100%; padding:22px 20px 40px;
+    display:flex; flex-direction:column; gap:11px;
+  ">
+    <div style="text-align:center;font-weight:800;font-size:16px;color:#1A1035;margin-bottom:4px;">בחרי תמונה</div>
+    <button id="pickerGalleryBtn" style="padding:15px;border:none;border-radius:14px;background:#f0eaf8;font-family:inherit;font-size:16px;font-weight:700;color:#1A1035;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">🖼️ גלריה</button>
+    <button id="pickerCameraBtn"  style="padding:15px;border:none;border-radius:14px;background:#f0eaf8;font-family:inherit;font-size:16px;font-weight:700;color:#1A1035;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">📸 מצלמה</button>
+    <button id="pickerCancelBtn"  style="padding:13px;border:none;border-radius:14px;background:transparent;font-family:inherit;font-size:15px;font-weight:600;color:#999;cursor:pointer;">ביטול</button>
+  </div>
+</div>
+
 <script>
 // ===== AVATARS SVG =====
 const AVATARS = [
@@ -1434,6 +1452,34 @@ function goBack() {
   history.back();
 }
 
+// ===== PHOTO PICKER (global scope) =====
+let _photoPickerTarget = null;
+function openPhotoPicker(target) {
+  _photoPickerTarget = target;
+  document.getElementById('photoPickerSheet').style.display = 'flex';
+}
+function closePhotoPicker() {
+  document.getElementById('photoPickerSheet').style.display = 'none';
+  _photoPickerTarget = null;
+}
+function handlePhotoFile(file, context) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    if (context === 'reg') {
+      state.userPhoto = ev.target.result;
+      document.querySelectorAll('#avatarGrid .avatar-option').forEach(el => el.classList.remove('selected'));
+      state.selectedAvatarIdx = null;
+    } else {
+      state.editPhoto = ev.target.result;
+      state.editAvatarIdx = null;
+      document.getElementById('editAvatarGrid').querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+    }
+    showToast('✅ תמונה נטענה');
+  };
+  reader.readAsDataURL(file);
+}
+
 // ===== BINDING =====
 function bindEvents() {
   // Welcome → Register
@@ -1465,42 +1511,18 @@ function bindEvents() {
     document.getElementById('modalRegister').classList.remove('open');
   });
 
-  // Photo upload — shared picker logic
-  let _photoPickerTarget = null;
-  function openPhotoPicker(target) {
-    _photoPickerTarget = target;
-    document.getElementById('photoPickerSheet').style.display = 'flex';
-  }
-  function closePhotoPicker() {
-    document.getElementById('photoPickerSheet').style.display = 'none';
-    _photoPickerTarget = null;
-  }
-  function handlePhotoFile(file, context) {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      if (context === 'reg') {
-        state.userPhoto = ev.target.result;
-        document.querySelectorAll('#avatarGrid .avatar-option').forEach(el => el.classList.remove('selected'));
-        state.selectedAvatarIdx = null;
-      } else {
-        state.editPhoto = ev.target.result;
-        state.editAvatarIdx = null;
-        document.getElementById('editAvatarGrid').querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
-      }
-      showToast('✅ תמונה נטענה');
-    };
-    reader.readAsDataURL(file);
-  }
-
+  // Photo upload — picker bindings
+  document.getElementById('photoPickerSheet').addEventListener('click', e => {
+    if (e.target === document.getElementById('photoPickerSheet')) closePhotoPicker();
+  });
   document.getElementById('photoUploadBtn').addEventListener('click', () => openPhotoPicker('reg'));
   document.getElementById('pickerGalleryBtn').addEventListener('click', () => {
     const t = _photoPickerTarget; closePhotoPicker();
-    document.getElementById(t === 'reg' ? 'photoFileInput' : 'editPhotoFileInput').click();
+    setTimeout(() => document.getElementById(t === 'reg' ? 'photoFileInput' : 'editPhotoFileInput').click(), 50);
   });
   document.getElementById('pickerCameraBtn').addEventListener('click', () => {
     const t = _photoPickerTarget; closePhotoPicker();
-    document.getElementById(t === 'reg' ? 'photoCameraInput' : 'editPhotoCameraInput').click();
+    setTimeout(() => document.getElementById(t === 'reg' ? 'photoCameraInput' : 'editPhotoCameraInput').click(), 50);
   });
   document.getElementById('pickerCancelBtn').addEventListener('click', closePhotoPicker);
 
@@ -2164,24 +2186,6 @@ function showToast(msg) {
 
 init();
 </script>
-
-<!-- ===== PHOTO PICKER SHEET ===== -->
-<div id="photoPickerSheet" style="
-  position:fixed; inset:0; z-index:10001;
-  display:none; align-items:flex-end;
-  background:rgba(0,0,0,0.45);
-" onclick="if(event.target===this)closePhotoPicker()">
-  <div style="
-    background:#fff; border-radius:22px 22px 0 0;
-    width:100%; padding:22px 20px 40px;
-    display:flex; flex-direction:column; gap:11px;
-  ">
-    <div style="text-align:center;font-weight:800;font-size:16px;color:#1A1035;margin-bottom:4px;">בחרי תמונה</div>
-    <button id="pickerGalleryBtn" style="padding:15px;border:none;border-radius:14px;background:#f0eaf8;font-family:inherit;font-size:16px;font-weight:700;color:#1A1035;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">🖼️ גלריה</button>
-    <button id="pickerCameraBtn"  style="padding:15px;border:none;border-radius:14px;background:#f0eaf8;font-family:inherit;font-size:16px;font-weight:700;color:#1A1035;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">📸 מצלמה</button>
-    <button id="pickerCancelBtn"  style="padding:13px;border:none;border-radius:14px;background:transparent;font-family:inherit;font-size:15px;font-weight:600;color:#999;cursor:pointer;">ביטול</button>
-  </div>
-</div>
 
 <!-- ===== EXIT CONFIRMATION DIALOG ===== -->
 <div class="exit-overlay" id="exitOverlay">
