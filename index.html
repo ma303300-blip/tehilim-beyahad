@@ -1238,18 +1238,6 @@ function init() {
     ];
   }
 
-  // Restore last screen
-  const lastScreen = localStorage.getItem('lastScreen');
-  if (lastScreen === 'screen-manager' && state.currentManager) {
-    renderManagerList();
-    renderManagerCard();
-    showScreen('screen-manager');
-  } else if (state.currentUser) {
-    updateHomeCard(state.currentUser);
-    updateAssignmentDisplay();
-    showScreen('screen-home');
-  }
-
   bindEvents();
 }
 
