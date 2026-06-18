@@ -1256,12 +1256,9 @@ function bindEvents() {
     }
   });
 
-  // Home → exit (logout member)
+  // Home → back to welcome (without clearing user data)
   document.getElementById('btnExitHome').addEventListener('click', () => {
-    state.currentUser = null;
-    localStorage.removeItem('tehilim_currentUser');
     showScreen('screen-welcome');
-    showToast('יצאת בהצלחה');
   });
 }
 
