@@ -1140,7 +1140,12 @@ function lighten(hex) {
 function bindEvents() {
   // Welcome → Register
   document.getElementById('btnMemberRegister').addEventListener('click', () => {
-    document.getElementById('modalRegister').classList.add('open');
+    if (state.currentUser) {
+      updateHomeCard(state.currentUser);
+      showScreen('screen-home');
+    } else {
+      document.getElementById('modalRegister').classList.add('open');
+    }
   });
   document.getElementById('closeRegister').addEventListener('click', () => {
     document.getElementById('modalRegister').classList.remove('open');
@@ -1538,6 +1543,14 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
+  if (id === 'screen-welcome') {
+    const btn = document.getElementById('btnMemberRegister');
+    if (state.currentUser) {
+      btn.innerHTML = '<span class="btn-icon">✨</span> כניסת מתפללת';
+    } else {
+      btn.innerHTML = '<span class="btn-icon">✨</span> רישום מתפללת';
+    }
+  }
 }
 
 function showToast(msg) {
@@ -1618,17 +1631,9 @@ init();
     }
   });
 
-  // Refresh button — clears SW cache and reloads
+  // Refresh button — simple page reload without clearing session
   document.getElementById('btnRefresh').addEventListener('click', () => {
-    if ('serviceWorker' in navigator) {
-      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(r => r.unregister());
-        location.reload(true);
-      });
-    } else {
-      location.reload(true);
-    }
+    location.reload();
   });
 
   // Prevent pull-to-refresh on Android (but allow normal downward scroll)
