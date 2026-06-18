@@ -1355,20 +1355,6 @@ function init() {
     .then(data => { state.tehilim = data; })
     .catch(() => console.log('Psalms text not available'));
 
-  // Demo members if none saved
-  if (state.members.length === 0) {
-    state.members = [
-      { id: 1, firstName: 'שרה', lastName: 'כהן', phone: '050-1234567', avatarIdx: 0, photo: null },
-      { id: 2, firstName: 'רחל', lastName: 'לוי', phone: '052-2345678', avatarIdx: 1, photo: null },
-      { id: 3, firstName: 'מרים', lastName: 'דוד', phone: '054-3456789', avatarIdx: 2, photo: null },
-      { id: 4, firstName: 'דינה', lastName: 'מזרחי', phone: '058-4567890', avatarIdx: 3, photo: null },
-      { id: 5, firstName: 'לאה', lastName: 'אברהם', phone: '050-5678901', avatarIdx: 0, photo: null },
-      { id: 6, firstName: 'תמר', lastName: 'פרץ', phone: '052-6789012', avatarIdx: 1, photo: null },
-      { id: 7, firstName: 'רות', lastName: 'בן-דוד', phone: '054-7890123', avatarIdx: 2, photo: null },
-      { id: 8, firstName: 'אסתר', lastName: 'שלום', phone: '058-8901234', avatarIdx: 3, photo: null },
-    ];
-  }
-
   renderBookshelf();
   bindEvents();
 
