@@ -1332,8 +1332,8 @@ function init() {
   loadFromStorage();
 
   // listeners בזמן אמת — מתעדכנים מיד בכל המכשירים
-  fbListenAssignments();
-  fbListenMembers();
+  if (typeof fbListenAssignments === 'function') fbListenAssignments();
+  if (typeof fbListenMembers === 'function') fbListenMembers();
 
   fetch('./psalms_hebrew.json')
     .then(r => r.json())
@@ -2310,7 +2310,7 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-init();
+window.addEventListener('load', init);
 </script>
 
 <!-- ===== EXIT CONFIRMATION DIALOG ===== -->
