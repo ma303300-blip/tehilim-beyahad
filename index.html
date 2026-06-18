@@ -2340,6 +2340,10 @@ function showScreen(id) {
       btn.innerHTML = '<span class="btn-icon">✨</span> רישום מתפללת';
     }
   }
+  if (id === 'screen-home' && state.currentUser && state.assignments[state.currentUser.id]) {
+    const a = state.assignments[state.currentUser.id];
+    setTimeout(() => flyBooksToShelf(a.end - a.start + 1), 300);
+  }
 }
 
 function showToast(msg) {
@@ -2703,14 +2707,10 @@ function fbListenAssignments() {
     if (state.currentUser) updateAssignmentDisplay();
     renderBookshelf();
 
-    // אנימציה: מציג אם החלוקה חדשה יותר מהפעם האחרונה שהוצגה
+    // אנימציה בכל עדכון חי בזמן שמסך הבית פתוח
     if (state.currentUser && state.assignments[state.currentUser.id]) {
-      const a         = state.assignments[state.currentUser.id];
-      const distTs    = data.updatedAt ? data.updatedAt.toMillis() : 0;
-      const shownTs   = parseInt(localStorage.getItem('tehilim_anim_ts') || '0', 10);
-      const onHome    = !!document.querySelector('#screen-home.active');
-      if (distTs > shownTs && onHome) {
-        localStorage.setItem('tehilim_anim_ts', distTs);
+      if (document.querySelector('#screen-home.active')) {
+        const a = state.assignments[state.currentUser.id];
         setTimeout(() => flyBooksToShelf(a.end - a.start + 1), 500);
       }
     }
@@ -2776,7 +2776,6 @@ async function doEndSession() {
   state.assignments = {};
   window._fbStatuses = {};
   localStorage.removeItem('tehilim_assignments');
-  localStorage.removeItem('tehilim_anim_ts');
   saveToStorage();
   renderManagerList();
   updateAssignmentDisplay && updateAssignmentDisplay();
