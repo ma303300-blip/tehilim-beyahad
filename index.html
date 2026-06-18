@@ -1287,8 +1287,7 @@ function init() {
   }
 
   bindEvents();
-  history.replaceState(null, '', '#screen-welcome');
-  history.pushState(null, '', '#screen-welcome'); // guard entry
+  history.replaceState({ depth: 1 }, '', '#screen-welcome');
 }
 
 function generateStars() {
@@ -1494,7 +1493,7 @@ function bindEvents() {
   // Back from reader
   document.getElementById('btnBackFromReader').addEventListener('click', () => {
     stopAutoScroll();
-    showScreen('screen-home');
+    history.back();
   });
 
   // Font size controls
@@ -1519,7 +1518,7 @@ function bindEvents() {
   document.getElementById('screen-reader').addEventListener('touchstart', wakeControls, { passive: true });
 
   document.getElementById('btnBackFromDist').addEventListener('click', () => {
-    showScreen('screen-manager');
+    history.back();
   });
 
   // Close member detail
@@ -1564,18 +1563,12 @@ function bindEvents() {
 
   // Manager → back to home/welcome
   document.getElementById('btnManagerToHome').addEventListener('click', () => {
-    if (state.currentUser) {
-      updateHomeCard(state.currentUser);
-      updateAssignmentDisplay();
-      showScreen('screen-home');
-    } else {
-      showScreen('screen-welcome');
-    }
+    history.back();
   });
 
   // Home → back to welcome (without clearing user data)
   document.getElementById('btnExitHome').addEventListener('click', () => {
-    showScreen('screen-welcome');
+    history.back();
   });
 
   // Bookshelf → open all assigned chapters
@@ -1592,27 +1585,21 @@ function bindEvents() {
     history.go(-(history.length));
   });
 
-  // Hardware back button — hash changes guarantee popstate fires on Android
+  // Hardware back button
   window.addEventListener('popstate', () => {
-    const current = document.querySelector('.screen.active')?.id;
-
-    // Already on welcome → show exit dialog + push guard
-    if (current === 'screen-welcome') {
-      history.pushState(null, '', '#screen-welcome');
+    // At root — show exit dialog and re-push to stay
+    if (_navStack.length <= 1) {
+      history.pushState({ depth: 1 }, '', '#screen-welcome');
       document.getElementById('exitOverlay').classList.add('open');
       return;
     }
 
-    // Map current screen → one step back
-    const target = (() => {
-      if (current === 'screen-reader')       return 'screen-home';
-      if (current === 'screen-home')         return 'screen-welcome';
-      if (current === 'screen-manager')      return 'screen-welcome';
-      if (current === 'screen-distribution') return 'screen-manager';
-      return 'screen-welcome';
-    })();
-
+    const current = document.querySelector('.screen.active')?.id;
     if (current === 'screen-reader') stopAutoScroll();
+
+    _navStack.pop();
+    const target = _navStack[_navStack.length - 1];
+
     _navFromHistory = true;
     if (target === 'screen-home' && state.currentUser) {
       updateHomeCard(state.currentUser);
@@ -1621,13 +1608,11 @@ function bindEvents() {
       renderManagerList();
       renderManagerCard();
     }
-    showScreen(target);
+    showScreen(target); // _navFromHistory=true → won't push to _navStack or history
     _navFromHistory = false;
 
-    // Push guard after reaching welcome so next back shows exit dialog
-    if (target === 'screen-welcome') {
-      history.pushState(null, '', '#screen-welcome');
-    }
+    // Re-push so next back has something to pop
+    history.pushState({ depth: _navStack.length }, '', '#' + target);
   });
 }
 
@@ -1681,6 +1666,7 @@ let fontFadeTimer = null;
 let scrollInterval = null;
 let scrollPaused = false;
 let _navFromHistory = false;
+const _navStack = ['screen-welcome']; // tracks navigation for hardware back button
 
 function applyFontSize() {
   document.querySelectorAll('.reader-verse-text').forEach(el => {
@@ -2119,7 +2105,8 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
   if (!_navFromHistory) {
-    history.pushState(null, '', '#' + id);
+    _navStack.push(id);
+    history.pushState({ depth: _navStack.length }, '', '#' + id);
   }
   if (id === 'screen-welcome') {
     const btn = document.getElementById('btnMemberRegister');
