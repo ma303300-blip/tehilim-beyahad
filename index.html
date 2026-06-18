@@ -376,16 +376,16 @@
     display: flex;
     align-items: flex-end;
     justify-content: flex-start;
-    gap: 1px;
+    gap: 0px;
   }
   /* מיקום מדפים — לכוונן לפי מיקום בתמונה */
-  .shelf-row:nth-child(1) { top: 25%; }
-  .shelf-row:nth-child(2) { top: 51%; }
-  .shelf-row:nth-child(3) { top: 76%; }
+  .shelf-row:nth-child(1) { top: 22%; }
+  .shelf-row:nth-child(2) { top: 48%; }
+  .shelf-row:nth-child(3) { top: 73%; }
 
   .book {
     flex: none;
-    width: 36px;
+    width: 28px;
     border-radius: 2px 2px 0 0;
     cursor: pointer;
     transition: transform 0.18s ease;
@@ -409,9 +409,9 @@
     line-height: 1;
   }
 
-  .book-h-tall  { height: 62px; }
-  .book-h-mid   { height: 52px; }
-  .book-h-short { height: 44px; }
+  .book-h-tall  { height: 56px; }
+  .book-h-mid   { height: 47px; }
+  .book-h-short { height: 40px; }
 
   /* MANAGER SCREEN */
   #screen-manager {
@@ -1469,7 +1469,7 @@ function renderBookshelf(skipOpen) {
   const a = state.currentUser && state.assignments[state.currentUser.id];
   if (a) {
     if (!skipOpen && cabinet) cabinet.classList.add('open');
-    const BOOKS_PER_ROW = 5;
+    const BOOKS_PER_ROW = 7;
     const chapters = [];
     for (let i = a.start; i <= a.end; i++) chapters.push(i);
     const numRows = Math.min(Math.ceil(chapters.length / BOOKS_PER_ROW), 3);
