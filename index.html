@@ -1284,7 +1284,6 @@ function init() {
   generateStars();
   renderAvatarGrid();
   setDateInfo();
-  renderBookshelf();
   loadFromStorage();
 
   fetch('./psalms_hebrew.json')
@@ -1306,8 +1305,16 @@ function init() {
     ];
   }
 
+  renderBookshelf();
   bindEvents();
+
+  // הגדר מסך ראשוני — אם מחוברת, חזור למסך הבית
   history.replaceState({ depth: 1 }, '', '#screen-welcome');
+  if (state.currentUser) {
+    updateHomeCard(state.currentUser);
+    updateAssignmentDisplay();
+    showScreen('screen-home');
+  }
 }
 
 function generateStars() {
