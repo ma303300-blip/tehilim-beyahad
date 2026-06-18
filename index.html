@@ -1623,7 +1623,16 @@ function bindEvents() {
   // Send chapters
   document.getElementById('btnSendChapters').addEventListener('click', doSendChapters);
   document.getElementById('btnResetChapters').addEventListener('click', doResetChapters);
-  document.getElementById('btnEndSession').addEventListener('click', doEndSession);
+  document.getElementById('btnEndSession').addEventListener('click', () => {
+    document.getElementById('resetOverlay').classList.add('open');
+  });
+  document.getElementById('resetCancel').addEventListener('click', () => {
+    document.getElementById('resetOverlay').classList.remove('open');
+  });
+  document.getElementById('resetConfirm').addEventListener('click', () => {
+    document.getElementById('resetOverlay').classList.remove('open');
+    doEndSession();
+  });
 
   // Back from reader
   document.getElementById('btnBackFromReader').addEventListener('click', goBack);
@@ -2329,6 +2338,36 @@ function showToast(msg) {
 window.addEventListener('load', init);
 </script>
 
+<!-- ===== RESET SESSION DIALOG ===== -->
+<div class="exit-overlay" id="resetOverlay">
+  <div class="exit-dialog" style="
+    background: linear-gradient(160deg, rgba(26,16,53,0.97) 0%, rgba(44,31,94,0.97) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(201,168,76,0.3);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08);
+    padding: 36px 28px 28px;
+  ">
+    <div style="font-size:42px; margin-bottom:14px;">🔄</div>
+    <div class="exit-dialog-title" style="color:#E8C97A; font-size:20px; margin-bottom:10px;">סיום מפגש</div>
+    <div class="exit-dialog-text" style="color:rgba(255,255,255,0.75); font-size:14px; line-height:1.7; margin-bottom:28px;">
+      לאפס את כל נתוני המפגש?<br>
+      <span style="color:rgba(255,255,255,0.45); font-size:12px;">חלוקת פרקים וסטטוסי קריאה יימחקו.<br>רשימת המתפללות תישאר.</span>
+    </div>
+    <div class="exit-dialog-btns">
+      <button class="exit-btn-cancel" id="resetCancel" style="
+        background: rgba(255,255,255,0.08);
+        color: rgba(255,255,255,0.7);
+        border: 1px solid rgba(255,255,255,0.12);
+      ">ביטול</button>
+      <button class="exit-btn-confirm" id="resetConfirm" style="
+        background: linear-gradient(135deg, #C9A84C, #E8C97A);
+        color: #1A1035;
+        box-shadow: 0 4px 18px rgba(201,168,76,0.4);
+      ">אפס מפגש</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== EXIT CONFIRMATION DIALOG ===== -->
 <div class="exit-overlay" id="exitOverlay">
   <div class="exit-dialog">
@@ -2636,8 +2675,6 @@ function fbListenReadingStatus() {
 }
 
 async function doEndSession() {
-  if (!confirm('לאפס את כל נתוני המפגש?\n(חלוקת פרקים + סטטוסי קריאה יימחקו)\nרשימת המתפללות תישאר.')) return;
-
   const btn = document.getElementById('btnEndSession');
   btn.textContent = '⏳ מאפס...';
   btn.disabled = true;
