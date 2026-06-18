@@ -639,31 +639,44 @@
   }
 
   /* READER SCREEN */
-  #screen-reader { overflow-y: auto; padding-bottom: 40px; }
+  #screen-reader {
+    overflow-y: auto; padding-bottom: 60px;
+    background: linear-gradient(160deg, #fdf8ed 0%, #f5e6c0 40%, #fdf8ed 70%, #eedca8 100%);
+  }
+  #screen-reader .bg-image { display: none; }
   .reader-header {
     position: sticky; top: 0; z-index: 10;
     display: flex; align-items: center; gap: 12px;
     padding: 14px 20px;
-    background: rgba(180,185,195,0.95);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255,255,255,0.3);
+    background: rgba(101,60,20,0.10);
+    border-bottom: 1.5px solid rgba(101,60,20,0.2);
     direction: rtl;
   }
+  .reader-header .btn-back { color: #6b3a1f; border-color: rgba(101,60,20,0.3); background: rgba(101,60,20,0.08); }
   .reader-title {
     font-family: 'Frank Ruhl Libre', serif;
-    font-size: 20px; font-weight: 700; color: var(--deep); flex: 1;
+    font-size: 18px; font-weight: 700; color: #4a2800; flex: 1;
   }
-  .reader-content { padding: 20px; direction: rtl; }
+  .reader-content { padding: 20px 24px; direction: rtl; }
+  .reader-chapter-title {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 22px; font-weight: 700; color: #6b3a1f;
+    text-align: center; margin: 32px 0 18px;
+    padding: 10px 0;
+    border-top: 1px solid rgba(101,60,20,0.25);
+    border-bottom: 1px solid rgba(101,60,20,0.25);
+  }
+  .reader-chapter-title:first-child { margin-top: 0; border-top: none; }
   .reader-verse {
-    display: flex; gap: 10px; margin-bottom: 18px; align-items: flex-start;
+    display: flex; gap: 10px; margin-bottom: 14px; align-items: flex-start;
   }
   .reader-verse-num {
-    font-size: 11px; font-weight: 700; color: var(--gold);
-    min-width: 22px; padding-top: 5px; flex-shrink: 0; text-align: center;
+    font-size: 10px; font-weight: 700; color: #8b5a2b;
+    min-width: 22px; padding-top: 6px; flex-shrink: 0; text-align: center;
   }
   .reader-verse-text {
     font-family: 'Frank Ruhl Libre', serif;
-    font-size: 20px; line-height: 1.8; color: var(--deep);
+    font-size: 20px; line-height: 1.9; color: #1e0f00;
   }
 
   /* CHAPTER PARTICLE ANIMATION */
@@ -1258,7 +1271,6 @@ function renderBookshelf() {
         book.className = `book book-h-tall`;
         book.style.cssText = `background:linear-gradient(180deg,${lighten(color)},${color}); min-width:36px; flex:none; cursor:pointer;`;
         book.innerHTML = `<div class="book-spine" style="font-size:7.5px; line-height:1.4;">תהילים<br><span style="font-size:12px; font-weight:900;">${toHebNum(ch)}</span></div>`;
-        book.addEventListener('click', () => showChapter(ch - 1));
         rowEl.appendChild(book);
       });
       wrap.appendChild(rowEl);
@@ -1438,6 +1450,9 @@ function bindEvents() {
   document.getElementById('btnExitHome').addEventListener('click', () => {
     showScreen('screen-welcome');
   });
+
+  // Bookshelf → open all assigned chapters
+  document.querySelector('#screen-home .bookshelf-wrap').addEventListener('click', showAllChapters);
 }
 
 function doRegister() {
@@ -1470,21 +1485,30 @@ function updateHomeCard(member) {
   }
 }
 
-function showChapter(chIdx) {
+function showAllChapters() {
   if (!state.tehilim) { showToast('טוען טקסט... נסי שוב'); return; }
-  const verses = state.tehilim[chIdx];
-  if (!verses) return;
-  document.getElementById('readerTitle').textContent = `תהילים ${toHebNum(chIdx + 1)}`;
+  if (!state.currentUser) return;
+  const a = state.assignments[state.currentUser.id];
+  if (!a) { showToast('לא הוקצו פרקים עדיין'); return; }
+
+  document.getElementById('readerTitle').textContent = `תהילים ${toHebNum(a.start)}–${toHebNum(a.end)}`;
   const content = document.getElementById('readerContent');
   content.innerHTML = '';
-  verses.forEach((text, i) => {
-    const row = document.createElement('div');
-    row.className = 'reader-verse';
-    row.innerHTML = `
-      <div class="reader-verse-num">${toHebNum(i + 1)}</div>
-      <div class="reader-verse-text">${text}</div>`;
-    content.appendChild(row);
-  });
+
+  for (let ch = a.start; ch <= a.end; ch++) {
+    const verses = state.tehilim[ch - 1];
+    if (!verses) continue;
+    const title = document.createElement('div');
+    title.className = 'reader-chapter-title';
+    title.textContent = `תהילים ${toHebNum(ch)}`;
+    content.appendChild(title);
+    verses.forEach((text, i) => {
+      const row = document.createElement('div');
+      row.className = 'reader-verse';
+      row.innerHTML = `<div class="reader-verse-num">${toHebNum(i + 1)}</div><div class="reader-verse-text">${text}</div>`;
+      content.appendChild(row);
+    });
+  }
   showScreen('screen-reader');
 }
 
