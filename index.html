@@ -1038,6 +1038,13 @@
     " title="בחרי מנהלת">👑</button>
   </div>
 
+  <button id="btnEndSession" style="
+    width:100%; margin-top:10px; padding:13px; border:none; border-radius:14px;
+    font-family:inherit; font-size:15px; font-weight:700; cursor:pointer;
+    background:rgba(140,30,30,0.85); color:#fff;
+    box-shadow:0 4px 14px rgba(0,0,0,0.25);
+  ">🔄 סיום מפגש — איפוס לחוג הבא</button>
+
   <div class="section-title">
     המתפללות <span id="membersCountLabel"></span>
   </div>
@@ -1600,6 +1607,7 @@ function bindEvents() {
   // Send chapters
   document.getElementById('btnSendChapters').addEventListener('click', doSendChapters);
   document.getElementById('btnResetChapters').addEventListener('click', doResetChapters);
+  document.getElementById('btnEndSession').addEventListener('click', doEndSession);
 
   // Back from reader
   document.getElementById('btnBackFromReader').addEventListener('click', goBack);
@@ -2585,6 +2593,38 @@ function fbListenReadingStatus() {
       snap.forEach(doc => { const d = doc.data(); window._fbStatuses[d.userId] = d; });
       renderManagerList();
     }, e => console.warn('fbListenReadingStatus', e));
+}
+
+async function doEndSession() {
+  if (!confirm('לאפס את כל נתוני המפגש?\n(חלוקת פרקים + סטטוסי קריאה יימחקו)\nרשימת המתפללות תישאר.')) return;
+
+  const btn = document.getElementById('btnEndSession');
+  btn.textContent = '⏳ מאפס...';
+  btn.disabled = true;
+
+  try {
+    // מחיקת כל סטטוסי הקריאה
+    if (window.db) {
+      const statusSnap = await window.db.collection('reading_status').get();
+      const batch = window.db.batch();
+      statusSnap.forEach(doc => batch.delete(doc.ref));
+      // מחיקת חלוקת הפרקים
+      batch.delete(window.db.collection('sessions').doc('current'));
+      await batch.commit();
+    }
+  } catch(e) { console.warn('doEndSession Firebase', e); }
+
+  // איפוס לוקל
+  state.assignments = {};
+  window._fbStatuses = {};
+  localStorage.removeItem('tehilim_assignments');
+  saveToStorage();
+  renderManagerList();
+  updateAssignmentDisplay && updateAssignmentDisplay();
+
+  btn.textContent = '🔄 סיום מפגש — איפוס לחוג הבא';
+  btn.disabled = false;
+  showToast('✅ המפגש אופס! מוכנות לחוג הבא 🙏');
 }
 
 function fbListenMembers() {
