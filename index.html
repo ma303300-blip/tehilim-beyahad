@@ -867,6 +867,20 @@
   }
   .my-chapters-count { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; }
 
+  #modalMemberLogin .modal-box {
+    background: rgba(0,0,0,0.8);
+  }
+  #modalMemberLogin .modal-title,
+  #modalMemberLogin .card-name,
+  #modalMemberLogin .card-phone {
+    color: #fff;
+  }
+  #modalMemberLogin .modal-close {
+    background: rgba(255,255,255,0.15); color: #fff;
+  }
+  #modalMemberLogin .modal-handle {
+    background: rgba(255,255,255,0.3);
+  }
 </style>
 </head>
 <body>
@@ -903,7 +917,6 @@
         </div>
         <button class="btn-edit-pencil" id="btnEditFromLogin" title="עריכה">✏️</button>
       </div>
-      <button class="btn-register" id="btnEnterFromLogin">כניסה לדף הבית ✨</button>
     </div>
   </div>
 </div>
@@ -1563,7 +1576,7 @@ function bindEvents() {
     document.getElementById('modalMemberLogin').classList.remove('open');
   });
 
-  document.getElementById('btnEnterFromLogin').addEventListener('click', () => {
+  document.getElementById('loginCard').addEventListener('click', () => {
     document.getElementById('modalMemberLogin').classList.remove('open');
     updateHomeCard(state.currentUser);
     updateAssignmentDisplay();
