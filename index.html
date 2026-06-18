@@ -2239,11 +2239,25 @@ init();
 <!-- PWA Service Worker Registration -->
 <script>
   if ('serviceWorker' in navigator) {
+    function activateWaiting(reg) {
+      if (reg && reg.waiting) {
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+    }
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then(() => console.log('SW registered'))
-        .catch(err => console.log('SW error:', err));
+      navigator.serviceWorker.register('sw.js').then(reg => {
+        // SW ממתין כבר — הפעל מיידית
+        activateWaiting(reg);
+        // SW חדש מתקין — הפעל מיידית כשיסיים
+        reg.addEventListener('updatefound', () => {
+          const w = reg.installing;
+          w.addEventListener('statechange', () => {
+            if (w.state === 'installed') activateWaiting(reg);
+          });
+        });
+      }).catch(err => console.log('SW error:', err));
     });
+    // כשה-SW מתחלף — טען מחדש
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       window.location.reload();
     });
