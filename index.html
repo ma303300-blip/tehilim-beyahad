@@ -1469,7 +1469,7 @@ function renderBookshelf(skipOpen) {
   const a = state.currentUser && state.assignments[state.currentUser.id];
   if (a) {
     if (!skipOpen && cabinet) cabinet.classList.add('open');
-    const BOOKS_PER_ROW = 7;
+    const BOOKS_PER_ROW = 6;
     const chapters = [];
     for (let i = a.start; i <= a.end; i++) chapters.push(i);
     const numRows = Math.min(Math.ceil(chapters.length / BOOKS_PER_ROW), 3);
