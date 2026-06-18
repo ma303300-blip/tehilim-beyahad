@@ -1439,7 +1439,8 @@ function renderAvatarGrid() {
 
 function selectAvatar(idx) {
   document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
-  document.querySelectorAll('.avatar-option')[idx].classList.add('selected');
+  const avatarEl = document.querySelectorAll('.avatar-option')[idx];
+  if (avatarEl) avatarEl.classList.add('selected');
   state.selectedAvatarIdx = idx;
   state.userPhoto = null; // clear photo if avatar selected
 }
@@ -1740,7 +1741,8 @@ function bindEvents() {
   });
 
   // Bookshelf → open all assigned chapters
-  document.querySelector('#screen-home .bookshelf-wrap').addEventListener('click', showAllChapters);
+  const bookshelfWrap = document.querySelector('#screen-home .bookshelf-wrap');
+  if (bookshelfWrap) bookshelfWrap.addEventListener('click', showAllChapters);
 
   // Exit dialog buttons
   document.getElementById('exitCancel').addEventListener('click', () => {
