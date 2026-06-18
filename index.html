@@ -2512,6 +2512,7 @@ window.addEventListener('load', init);
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 (function() {
@@ -2526,6 +2527,9 @@ window.addEventListener('load', init);
   try {
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     window.db = firebase.firestore();
+    firebase.auth().signInAnonymously()
+      .then(() => setSyncStatus('ok'))
+      .catch(e => { console.warn('Firebase auth failed', e); setSyncStatus('err'); });
   } catch(e) { console.warn('Firebase init failed', e); window.db = null; }
 })();
 
