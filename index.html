@@ -90,30 +90,39 @@
     overflow: hidden;
   }
 
-  @keyframes spin-border {
+  @keyframes spin-comet {
     from { transform: translate(-50%,-50%) rotate(0deg); }
     to   { transform: translate(-50%,-50%) rotate(360deg); }
   }
 
   #joinBtnWrap.joined {
     padding: 4px;
-    box-shadow: 0 0 18px rgba(0,220,60,0.55);
+    background: rgba(0,50,15,0.5);
+    box-shadow: 0 0 18px rgba(0,220,60,0.45);
   }
 
+  /* שובל קומטה — ראש לבן-ירוק שדועך ל-transparent */
   #joinBtnWrap.joined::before {
     content: '';
     position: absolute;
     top: 50%; left: 50%;
-    width: 300%; height: 300%;
+    width: 280%; height: 280%;
     background: conic-gradient(
-      transparent 0deg,
-      transparent 160deg,
-      #00ff55 160deg,
-      #44ff88 210deg,
-      #00dd44 230deg,
-      transparent 250deg
+      from 0deg,
+      transparent         0deg,
+      transparent         200deg,
+      rgba(0,255,80,0.04) 220deg,
+      rgba(0,255,80,0.12) 240deg,
+      rgba(0,255,80,0.28) 265deg,
+      rgba(0,255,100,0.55) 290deg,
+      rgba(60,255,130,0.82) 320deg,
+      rgba(140,255,180,0.96) 348deg,
+      #ffffff             357deg,
+      #ffffff             360deg,
+      transparent         360deg
     );
-    animation: spin-border 4s linear infinite;
+    transform: translate(-50%,-50%) rotate(0deg);
+    animation: spin-comet 2.7s linear infinite;
     z-index: 0;
   }
 
