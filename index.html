@@ -1287,8 +1287,8 @@ function init() {
   }
 
   bindEvents();
-  history.replaceState({ screen: 'screen-welcome' }, '');
-  history.pushState({ screen: 'screen-welcome' }, ''); // guard: 2 entries so first back stays in app
+  history.replaceState(null, '', '#screen-welcome');
+  history.pushState(null, '', '#screen-welcome'); // guard entry
 }
 
 function generateStars() {
@@ -1584,33 +1584,31 @@ function bindEvents() {
   // Exit dialog buttons
   document.getElementById('exitCancel').addEventListener('click', () => {
     document.getElementById('exitOverlay').classList.remove('open');
-    history.pushState({ screen: 'screen-welcome' }, '');
+    history.pushState(null, '', '#screen-welcome');
   });
   document.getElementById('exitConfirm').addEventListener('click', () => {
     document.getElementById('exitOverlay').classList.remove('open');
-    // Try to close the PWA/tab; fallback: stay
     try { window.close(); } catch(e) {}
-    // On Android PWA, go back past our history to trigger system exit
     history.go(-(history.length));
   });
 
-  // Hardware back button
+  // Hardware back button — hash changes guarantee popstate fires on Android
   window.addEventListener('popstate', () => {
     const current = document.querySelector('.screen.active')?.id;
 
-    // Already on welcome → show exit dialog, re-push guard
+    // Already on welcome → show exit dialog + push guard
     if (current === 'screen-welcome') {
-      history.pushState({ screen: 'screen-welcome' }, '');
+      history.pushState(null, '', '#screen-welcome');
       document.getElementById('exitOverlay').classList.add('open');
       return;
     }
 
-    // Navigate one step back based on current screen
+    // Map current screen → one step back
     const target = (() => {
-      if (current === 'screen-reader') return 'screen-home';
-      if (current === 'screen-home')    return 'screen-welcome';
-      if (current === 'screen-manager') return 'screen-welcome';
-      if (current === 'screen-dist')    return 'screen-manager';
+      if (current === 'screen-reader')       return 'screen-home';
+      if (current === 'screen-home')         return 'screen-welcome';
+      if (current === 'screen-manager')      return 'screen-welcome';
+      if (current === 'screen-distribution') return 'screen-manager';
       return 'screen-welcome';
     })();
 
@@ -1626,9 +1624,9 @@ function bindEvents() {
     showScreen(target);
     _navFromHistory = false;
 
-    // If arrived at welcome, push guard so next back triggers exit dialog
+    // Push guard after reaching welcome so next back shows exit dialog
     if (target === 'screen-welcome') {
-      history.pushState({ screen: 'screen-welcome' }, '');
+      history.pushState(null, '', '#screen-welcome');
     }
   });
 }
@@ -2121,7 +2119,7 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
   if (!_navFromHistory) {
-    history.pushState({ screen: id }, '');
+    history.pushState(null, '', '#' + id);
   }
   if (id === 'screen-welcome') {
     const btn = document.getElementById('btnMemberRegister');
