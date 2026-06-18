@@ -185,7 +185,7 @@
   /* ===== MODAL ===== */
   .modal-overlay {
     display: none; position: fixed; inset: 0; z-index: 100;
-    background: rgba(26,16,53,0.7); backdrop-filter: blur(4px);
+    background: rgba(0,0,0,0.45);
     align-items: flex-end; justify-content: center;
   }
   .modal-overlay.open { display: flex; }
@@ -194,17 +194,18 @@
     background: var(--cream); border-radius: 28px 28px 0 0;
     width: 100%; max-width: 480px; max-height: 92vh;
     padding: 0 0 30px 0; overflow-y: auto;
-    animation: modal-zoom-in 0.45s cubic-bezier(0.34,1.2,0.64,1);
   }
 
   @keyframes modal-zoom-in {
-    from { transform: scale(0.72); opacity: 0; }
-    to   { transform: scale(1);    opacity: 1; }
+    from { transform: scale(0.8); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
   }
 
-  @keyframes slide-up {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
+  /* אנימציה רצה רק כשהחלון נפתח */
+  .modal-overlay.open .modal-box,
+  .modal-overlay.open .member-detail-card,
+  .exit-overlay.open .exit-dialog {
+    animation: modal-zoom-in 1.2s cubic-bezier(0.2,0.85,0.3,1) both;
   }
 
   .modal-handle {
@@ -567,7 +568,6 @@
     background: var(--cream); border-radius: 28px 28px 0 0;
     width: 100%; max-width: 480px;
     padding: 0 24px 30px;
-    animation: modal-zoom-in 0.45s cubic-bezier(0.34,1.2,0.64,1);
   }
 
   .detail-avatar-wrap {
@@ -605,20 +605,18 @@
   /* EXIT CONFIRMATION DIALOG */
   .exit-overlay {
     position: fixed; inset: 0; z-index: 9999;
-    background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
+    background: rgba(0,0,0,0.45);
     display: none; align-items: center; justify-content: center;
     pointer-events: none;
   }
   .exit-overlay.open { display: flex; pointer-events: all; }
-  #resetOverlay { background: transparent; backdrop-filter: none; }
+  #resetOverlay { background: transparent; }
   .exit-dialog {
     background: linear-gradient(160deg, #fefefe, #f5f0ff);
     border-radius: 22px; padding: 32px 28px 24px;
     text-align: center; width: min(320px, 88vw);
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    animation: modal-zoom-in 0.45s cubic-bezier(0.34,1.2,0.64,1);
   }
-  .exit-overlay.open .exit-dialog { transform: scale(1); opacity: 1; }
   .exit-dialog-title {
     font-size: 19px; font-weight: 800; color: var(--deep); margin-bottom: 10px;
   }
@@ -877,7 +875,9 @@
     backdrop-filter: none;
   }
   #modalMemberLogin .modal-box {
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.2);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
   #modalMemberLogin .modal-title,
   #modalMemberLogin .card-name,
@@ -2404,10 +2404,11 @@ window.addEventListener('load', init);
 <!-- ===== RESET SESSION DIALOG ===== -->
 <div class="exit-overlay" id="resetOverlay">
   <div class="exit-dialog" style="
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4);
     padding: 36px 28px 28px;
   ">
     <div style="font-size:42px; margin-bottom:14px;">🔄</div>
