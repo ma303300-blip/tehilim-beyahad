@@ -679,6 +679,41 @@
     font-size: 20px; line-height: 1.9; color: #1e0f00;
   }
 
+  /* AUTO-SCROLL BUTTON */
+  .btn-autoscroll {
+    font-size: 12px; font-weight: 700;
+    padding: 6px 12px; border-radius: 16px;
+    border: 1.5px solid rgba(101,60,20,0.35);
+    background: rgba(101,60,20,0.10);
+    color: #6b3a1f; cursor: pointer; white-space: nowrap;
+    transition: background 0.2s, color 0.2s;
+    flex-shrink: 0;
+  }
+  .btn-autoscroll.active {
+    background: rgba(101,60,20,0.75);
+    color: #fdf8ed;
+    border-color: transparent;
+  }
+
+  /* FONT SIZE CONTROLS */
+  .font-controls {
+    position: fixed; left: 14px; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 10px;
+    z-index: 20; transition: opacity 0.6s ease;
+    opacity: 1;
+  }
+  .font-controls.faded { opacity: 0.10; }
+  .font-btn {
+    width: 46px; height: 46px; border-radius: 50%;
+    border: none; cursor: pointer;
+    background: rgba(101,60,20,0.82);
+    color: #fdf8ed; font-size: 24px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.28);
+    user-select: none; -webkit-user-select: none;
+    line-height: 1;
+  }
+
   /* CHAPTER PARTICLE ANIMATION */
   .chapter-particle {
     position: fixed; font-size: 22px; pointer-events: none; z-index: 99999;
@@ -922,8 +957,13 @@
   <div class="reader-header">
     <button class="btn-back" id="btnBackFromReader">⟶ חזרה</button>
     <div class="reader-title" id="readerTitle">תהילים א</div>
+    <button class="btn-autoscroll" id="btnAutoScroll">▶ גלילה</button>
   </div>
   <div class="reader-content" id="readerContent"></div>
+  <div class="font-controls faded" id="fontControls">
+    <button class="font-btn" id="btnFontPlus">+</button>
+    <button class="font-btn" id="btnFontMinus">−</button>
+  </div>
 </div>
 
 <!-- ===== MEMBER DETAIL MODAL ===== -->
@@ -1386,10 +1426,28 @@ function bindEvents() {
   document.getElementById('btnSendChapters').addEventListener('click', doSendChapters);
   document.getElementById('btnResetChapters').addEventListener('click', doResetChapters);
 
-  // Back from distribution
+  // Back from reader
   document.getElementById('btnBackFromReader').addEventListener('click', () => {
+    stopAutoScroll();
     showScreen('screen-home');
   });
+
+  // Font size controls
+  document.getElementById('btnFontPlus').addEventListener('click', () => {
+    if (readerFontSize < 34) { readerFontSize += 2; applyFontSize(); }
+    wakeControls();
+  });
+  document.getElementById('btnFontMinus').addEventListener('click', () => {
+    if (readerFontSize > 14) { readerFontSize -= 2; applyFontSize(); }
+    wakeControls();
+  });
+  document.getElementById('fontControls').addEventListener('touchstart', wakeControls, { passive: true });
+
+  // Auto-scroll
+  document.getElementById('btnAutoScroll').addEventListener('click', toggleAutoScroll);
+
+  // Wake controls on reader touch/scroll
+  document.getElementById('screen-reader').addEventListener('touchstart', wakeControls, { passive: true });
 
   document.getElementById('btnBackFromDist').addEventListener('click', () => {
     showScreen('screen-manager');
@@ -1485,12 +1543,56 @@ function updateHomeCard(member) {
   }
 }
 
+// ===== READER CONTROLS =====
+let readerFontSize = parseInt(localStorage.getItem('tehilim_fontSize') || '20');
+let fontFadeTimer = null;
+let scrollInterval = null;
+
+function applyFontSize() {
+  document.querySelectorAll('.reader-verse-text').forEach(el => {
+    el.style.fontSize = readerFontSize + 'px';
+  });
+  localStorage.setItem('tehilim_fontSize', readerFontSize);
+}
+
+function wakeControls() {
+  const controls = document.getElementById('fontControls');
+  if (!controls) return;
+  controls.classList.remove('faded');
+  clearTimeout(fontFadeTimer);
+  fontFadeTimer = setTimeout(() => controls.classList.add('faded'), 3000);
+}
+
+function stopAutoScroll() {
+  if (scrollInterval) { clearInterval(scrollInterval); scrollInterval = null; }
+  const btn = document.getElementById('btnAutoScroll');
+  if (btn) { btn.classList.remove('active'); btn.textContent = '▶ גלילה'; }
+}
+
+function toggleAutoScroll() {
+  const btn = document.getElementById('btnAutoScroll');
+  const screen = document.getElementById('screen-reader');
+  if (scrollInterval) {
+    stopAutoScroll();
+  } else {
+    btn.classList.add('active');
+    btn.textContent = '⏸ עצור';
+    scrollInterval = setInterval(() => {
+      screen.scrollTop += 1;
+      if (screen.scrollTop + screen.clientHeight >= screen.scrollHeight - 2) {
+        stopAutoScroll();
+      }
+    }, 30);
+  }
+}
+
 function showAllChapters() {
   if (!state.tehilim) { showToast('טוען טקסט... נסי שוב'); return; }
   if (!state.currentUser) return;
   const a = state.assignments[state.currentUser.id];
   if (!a) { showToast('לא הוקצו פרקים עדיין'); return; }
 
+  stopAutoScroll();
   document.getElementById('readerTitle').textContent = `תהילים ${toHebNum(a.start)}–${toHebNum(a.end)}`;
   const content = document.getElementById('readerContent');
   content.innerHTML = '';
@@ -1509,7 +1611,11 @@ function showAllChapters() {
       content.appendChild(row);
     });
   }
+
   showScreen('screen-reader');
+  document.getElementById('screen-reader').scrollTop = 0;
+  applyFontSize();
+  wakeControls();
 }
 
 function updateAssignmentDisplay() {
