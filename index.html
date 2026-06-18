@@ -94,6 +94,19 @@
     animation: blink-green 1.5s ease-in-out infinite;
   }
 
+  #syncBar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+    height: 24px; display: flex; align-items: center; justify-content: center;
+    gap: 6px; font-family: inherit; font-size: 11px; font-weight: 700;
+    color: #fff; background: rgba(80,80,80,0.82);
+    transition: background 0.5s ease;
+    pointer-events: none;
+  }
+  #syncDot { font-size: 9px; transition: color 0.5s; }
+  #syncBar.ok  { background: rgba(20,140,55,0.88); }
+  #syncBar.err { background: rgba(180,30,30,0.90); }
+  .screen { padding-bottom: 28px; }
+
   .welcome-inner {
     display: flex; flex-direction: column; align-items: center;
     gap: 20px; width: 100%; max-width: 380px; position: relative; z-index: 1;
@@ -2491,6 +2504,11 @@ window.addEventListener('load', init);
   </div>
 </div>
 
+<div id="syncBar">
+  <span id="syncDot">●</span>
+  <span id="syncText">מתחבר...</span>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
@@ -2512,6 +2530,19 @@ window.addEventListener('load', init);
 window._fbStatuses = {};
 window._statusUnsub = null;
 window._membersUnsub = null;
+
+function setSyncStatus(s) {
+  const bar = document.getElementById('syncBar');
+  const txt = document.getElementById('syncText');
+  if (!bar || !txt) return;
+  bar.classList.remove('ok', 'err');
+  if (s === 'ok')  { bar.classList.add('ok');  txt.textContent = 'מסונכרן'; }
+  else if (s === 'err') { bar.classList.add('err'); txt.textContent = 'תקלה בסנכרון'; }
+  else { txt.textContent = 'מתחבר...'; }
+}
+
+window.addEventListener('online',  () => setSyncStatus('ok'));
+window.addEventListener('offline', () => setSyncStatus('err'));
 
 function _todayDateStr() {
   const d = new Date();
@@ -2548,6 +2579,7 @@ function fbLoadAssignments() {
 function fbListenAssignments() {
   if (!window.db) return;
   window.db.collection('sessions').doc('current').onSnapshot(snap => {
+    setSyncStatus('ok');
     if (!snap.exists) return;
     const fbA = snap.data().assignments;
     if (!fbA) return;
@@ -2555,7 +2587,7 @@ function fbListenAssignments() {
     saveToStorage();
     if (state.currentUser) updateAssignmentDisplay();
     renderBookshelf();
-  }, e => console.warn('fbListenAssignments', e));
+  }, e => { console.warn('fbListenAssignments', e); setSyncStatus('err'); });
 }
 
 function fbSetJoinStatus(userId, joined) {
@@ -2589,10 +2621,11 @@ function fbListenReadingStatus() {
   window._statusUnsub = window.db.collection('reading_status')
     .where('date', '==', dateStr)
     .onSnapshot(snap => {
+      setSyncStatus('ok');
       window._fbStatuses = {};
       snap.forEach(doc => { const d = doc.data(); window._fbStatuses[d.userId] = d; });
       renderManagerList();
-    }, e => console.warn('fbListenReadingStatus', e));
+    }, e => { console.warn('fbListenReadingStatus', e); setSyncStatus('err'); });
 }
 
 async function doEndSession() {
@@ -2631,6 +2664,7 @@ function fbListenMembers() {
   if (!window.db) return;
   if (window._membersUnsub) window._membersUnsub();
   window._membersUnsub = window.db.collection('members').onSnapshot(snap => {
+    setSyncStatus('ok');
     const fbMembers = [];
     snap.forEach(doc => fbMembers.push(doc.data()));
     let changed = false;
@@ -2645,7 +2679,7 @@ function fbListenMembers() {
       }
     });
     if (changed) { saveToStorage(); renderManagerList(); }
-  }, e => console.warn('fbListenMembers', e));
+  }, e => { console.warn('fbListenMembers', e); setSyncStatus('err'); });
 }
 </script>
 </body>
