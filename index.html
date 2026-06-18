@@ -605,19 +605,18 @@
   /* EXIT CONFIRMATION DIALOG */
   .exit-overlay {
     position: fixed; inset: 0; z-index: 9999;
-    background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.25s;
+    background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    pointer-events: none;
   }
-  .exit-overlay.open { opacity: 1; pointer-events: all; }
+  .exit-overlay.open { display: flex; pointer-events: all; }
+  #resetOverlay { background: transparent; backdrop-filter: none; }
   .exit-dialog {
     background: linear-gradient(160deg, #fefefe, #f5f0ff);
     border-radius: 22px; padding: 32px 28px 24px;
     text-align: center; width: min(320px, 88vw);
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    transform: scale(0.72); opacity: 0;
-    transition: transform 0.45s cubic-bezier(0.34,1.2,0.64,1), opacity 0.35s ease;
+    animation: modal-zoom-in 0.45s cubic-bezier(0.34,1.2,0.64,1);
   }
   .exit-overlay.open .exit-dialog { transform: scale(1); opacity: 1; }
   .exit-dialog-title {
