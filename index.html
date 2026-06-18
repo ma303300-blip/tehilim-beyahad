@@ -697,9 +697,9 @@
 
   /* FONT SIZE CONTROLS */
   .font-controls {
-    position: fixed; left: 14px; top: 50%; transform: translateY(-50%);
+    position: fixed !important; left: 14px; top: 50%; transform: translateY(-50%);
     display: flex; flex-direction: column; gap: 10px;
-    z-index: 20; transition: opacity 0.6s ease;
+    z-index: 200; transition: opacity 0.6s ease;
     opacity: 1;
   }
   .font-controls.faded { opacity: 0.10; }
@@ -1578,8 +1578,8 @@ function toggleAutoScroll() {
     btn.classList.add('active');
     btn.textContent = '⏸ עצור';
     scrollInterval = setInterval(() => {
-      screen.scrollTop += 1;
-      if (screen.scrollTop + screen.clientHeight >= screen.scrollHeight - 2) {
+      window.scrollBy(0, 1);
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
         stopAutoScroll();
       }
     }, 30);
@@ -1613,7 +1613,7 @@ function showAllChapters() {
   }
 
   showScreen('screen-reader');
-  document.getElementById('screen-reader').scrollTop = 0;
+  window.scrollTo(0, 0);
   applyFontSize();
   wakeControls();
 }
