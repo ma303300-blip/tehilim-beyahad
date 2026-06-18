@@ -1300,9 +1300,21 @@ function renderManagerList() {
   list.innerHTML = '';
   document.getElementById('membersCountLabel').textContent = `(${state.members.length})`;
 
-  state.members.forEach(m => {
+  const ROW_COLORS = [
+    'rgba(255,200,200,0.90)',
+    'rgba(255,220,180,0.90)',
+    'rgba(255,240,180,0.90)',
+    'rgba(200,240,200,0.90)',
+    'rgba(180,230,255,0.90)',
+    'rgba(200,200,255,0.90)',
+    'rgba(240,200,255,0.90)',
+    'rgba(255,200,230,0.90)',
+  ];
+
+  state.members.forEach((m, idx) => {
     const row = document.createElement('div');
     row.className = 'member-row';
+    row.style.background = ROW_COLORS[idx % ROW_COLORS.length];
 
     const avatarDiv = document.createElement('div');
     avatarDiv.className = 'member-row-avatar';
