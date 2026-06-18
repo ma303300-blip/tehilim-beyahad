@@ -679,6 +679,24 @@
     font-size: 20px; line-height: 1.9; color: #1e0f00;
   }
 
+  /* SCROLL SPEED BAR */
+  .scroll-speed-bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 20px; direction: ltr;
+    background: rgba(101,60,20,0.07);
+    border-bottom: 1px solid rgba(101,60,20,0.12);
+    max-height: 0; overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  }
+  .scroll-speed-bar.visible {
+    max-height: 48px; opacity: 1; padding: 8px 20px;
+  }
+  .speed-label { font-size: 12px; color: #6b3a1f; white-space: nowrap; flex-shrink: 0; }
+  #scrollSpeedSlider {
+    flex: 1; accent-color: #6b3a1f; cursor: pointer; height: 4px;
+  }
+
   /* AUTO-SCROLL BUTTON */
   .btn-autoscroll {
     font-size: 12px; font-weight: 700;
@@ -958,6 +976,11 @@
     <button class="btn-back" id="btnBackFromReader">⟶ חזרה</button>
     <div class="reader-title" id="readerTitle">תהילים א</div>
     <button class="btn-autoscroll" id="btnAutoScroll">▶ גלילה</button>
+  </div>
+  <div class="scroll-speed-bar" id="scrollSpeedBar">
+    <span class="speed-label">איטי</span>
+    <input type="range" id="scrollSpeedSlider" min="1" max="10" value="3" dir="ltr">
+    <span class="speed-label">מהיר</span>
   </div>
   <div class="reader-content" id="readerContent"></div>
   <div class="font-controls faded" id="fontControls">
@@ -1445,6 +1468,9 @@ function bindEvents() {
 
   // Auto-scroll
   document.getElementById('btnAutoScroll').addEventListener('click', toggleAutoScroll);
+  document.getElementById('scrollSpeedSlider').addEventListener('input', () => {
+    if (scrollInterval) startScrollInterval();
+  });
 
   // Wake controls on reader touch/scroll
   document.getElementById('screen-reader').addEventListener('touchstart', wakeControls, { passive: true });
@@ -1567,22 +1593,31 @@ function stopAutoScroll() {
   if (scrollInterval) { clearInterval(scrollInterval); scrollInterval = null; }
   const btn = document.getElementById('btnAutoScroll');
   if (btn) { btn.classList.remove('active'); btn.textContent = '▶ גלילה'; }
+  const bar = document.getElementById('scrollSpeedBar');
+  if (bar) bar.classList.remove('visible');
+}
+
+function startScrollInterval() {
+  if (scrollInterval) clearInterval(scrollInterval);
+  const speed = parseInt(document.getElementById('scrollSpeedSlider').value);
+  const px = speed * 0.5;
+  scrollInterval = setInterval(() => {
+    window.scrollBy(0, px);
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+      stopAutoScroll();
+    }
+  }, 30);
 }
 
 function toggleAutoScroll() {
   const btn = document.getElementById('btnAutoScroll');
-  const screen = document.getElementById('screen-reader');
   if (scrollInterval) {
     stopAutoScroll();
   } else {
     btn.classList.add('active');
     btn.textContent = '⏸ עצור';
-    scrollInterval = setInterval(() => {
-      window.scrollBy(0, 1);
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
-        stopAutoScroll();
-      }
-    }, 30);
+    document.getElementById('scrollSpeedBar').classList.add('visible');
+    startScrollInterval();
   }
 }
 
