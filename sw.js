@@ -1,11 +1,12 @@
-const CACHE_NAME = 'tehilim-beyahad-v3';
+const CACHE_NAME = 'tehilim-beyahad-v4';
 const ASSETS = [
   '/tehilim-beyahad/',
   '/tehilim-beyahad/index.html',
   '/tehilim-beyahad/manifest.json',
   '/tehilim-beyahad/icon-192.png',
   '/tehilim-beyahad/icon-512.png',
-  '/tehilim-beyahad/apple-touch-icon.png'
+  '/tehilim-beyahad/apple-touch-icon.png',
+  '/tehilim-beyahad/psalms_hebrew.json'
 ];
 
 self.addEventListener('install', e => {
