@@ -2316,6 +2316,7 @@ function doResetChapters() {
 }
 
 function doSendChapters() {
+  if (!state.currentManager) { showToast('⚠️ יש להגדיר מנהלת לפני שליחת פרקים'); return; }
   const selected = state.members.filter(m => state.selectedForSession.has(m.id));
   if (selected.length === 0) { showToast('⚠️ אנא בחרי מתפללות תחילה'); return; }
 
