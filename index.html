@@ -2692,28 +2692,27 @@ function flyBooksToShelf(count) {
 
 function fbListenAssignments() {
   if (!window.db) return;
-  let _firstAssignSnap = true;
   window.db.collection('sessions').doc('current').onSnapshot(snap => {
     setSyncStatus('ok');
     if (!snap.exists) return;
-    const fbA = snap.data().assignments;
-    if (!fbA) return;
+    const data = snap.data();
+    if (!data || !data.assignments) return;
 
-    const hadAssignment = state.currentUser && !!state.assignments[state.currentUser.id];
-    state.assignments = fbA;
+    state.assignments = data.assignments;
     saveToStorage();
-
-    const hasAssignment = state.currentUser && !!state.assignments[state.currentUser.id];
-    const isFirstTime   = !_firstAssignSnap === false || !hadAssignment;
-    _firstAssignSnap = false;
-
     if (state.currentUser) updateAssignmentDisplay();
     renderBookshelf();
 
-    // הנפשה רק כשמגיעים פרקים לראשונה (לא בטעינה ולא אחרי איפוס)
-    if (hasAssignment && !hadAssignment && document.querySelector('#screen-home.active')) {
-      const a = state.assignments[state.currentUser.id];
-      setTimeout(() => flyBooksToShelf(a.end - a.start + 1), 400);
+    // אנימציה: מציג אם החלוקה חדשה יותר מהפעם האחרונה שהוצגה
+    if (state.currentUser && state.assignments[state.currentUser.id]) {
+      const a         = state.assignments[state.currentUser.id];
+      const distTs    = data.updatedAt ? data.updatedAt.toMillis() : 0;
+      const shownTs   = parseInt(localStorage.getItem('tehilim_anim_ts') || '0', 10);
+      const onHome    = !!document.querySelector('#screen-home.active');
+      if (distTs > shownTs && onHome) {
+        localStorage.setItem('tehilim_anim_ts', distTs);
+        setTimeout(() => flyBooksToShelf(a.end - a.start + 1), 500);
+      }
     }
   }, e => { console.warn('fbListenAssignments', e); setSyncStatus('err'); });
 }
@@ -2777,6 +2776,7 @@ async function doEndSession() {
   state.assignments = {};
   window._fbStatuses = {};
   localStorage.removeItem('tehilim_assignments');
+  localStorage.removeItem('tehilim_anim_ts');
   saveToStorage();
   renderManagerList();
   updateAssignmentDisplay && updateAssignmentDisplay();
