@@ -338,38 +338,57 @@
   }
 
   /* BOOKSHELF */
-  .bookshelf-wrap { padding: 20px; margin-top: 96px; }
+  /* ===== BOOKCASE ===== */
+  .bookshelf-wrap {
+    padding: 10px 20px 20px;
+    margin-top: 10px;
+  }
 
-  .shelf-container {
-    background: rgba(0,0,0,0.60);
-    border-radius: 20px;
-    padding: 16px 12px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+  .bookcase-wrap {
     position: relative;
+    width: 100%;
+    max-width: 310px;
+    margin: 0 auto;
+    cursor: pointer;
+    border-radius: 10px;
     overflow: hidden;
   }
 
-  .shelf-label {
-    text-align: center; font-family: 'Frank Ruhl Libre', serif;
-    font-size: 13px; color: #FFFFFF;
-    letter-spacing: 2px; margin-bottom: 12px;
-    font-weight: 700;
+  .bookcase-img {
+    width: 100%; display: block;
+    position: absolute; top: 0; left: 0;
+    transition: opacity 0.55s ease;
+    border-radius: 10px;
   }
+  #bookcaseClosed { position: relative; opacity: 1; z-index: 2; }
+  #bookcaseOpen   { opacity: 0; z-index: 1; }
+  .bookcase-wrap.open #bookcaseClosed { opacity: 0; }
+  .bookcase-wrap.open #bookcaseOpen   { opacity: 1; z-index: 3; }
+
+  /* ספרים מונחים מעל התמונה הפתוחה */
+  #bookshelfRows {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 4; pointer-events: none;
+  }
+  .bookcase-wrap.open #bookshelfRows { pointer-events: auto; }
 
   .shelf-row {
-    display: flex; gap: 6px; align-items: flex-end;
-    justify-content: center;
-    padding: 8px 4px 0;
-    border-bottom: 8px solid #1A0D05;
-    margin-bottom: 8px;
-    position: relative;
-    flex-wrap: wrap;
+    position: absolute;
+    left: 13%; right: 10%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 4px;
   }
-  .shelf-row:last-child { margin-bottom: 0; }
+  /* שלוש המדפים — מיקום לפי גובה תמונת הארון הפתוח */
+  .shelf-row:nth-child(1) { top: 36%; }
+  .shelf-row:nth-child(2) { top: 56%; }
+  .shelf-row:nth-child(3) { top: 75%; }
 
   .book {
     flex: none;
-    width: 58px;
+    width: 46px;
     border-radius: 3px 3px 0 0;
     cursor: pointer;
     transition: transform 0.18s ease;
@@ -378,24 +397,24 @@
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center top;
-    box-shadow: 3px 5px 14px rgba(0,0,0,0.65), 1px 0 0 rgba(255,255,255,0.04);
+    box-shadow: 2px 4px 10px rgba(0,0,0,0.7);
   }
-  .book:active { transform: translateY(-6px); }
+  .book:active { transform: translateY(-5px); }
 
   .book-ch {
     position: absolute;
-    bottom: 9px; left: 0; right: 0;
+    bottom: 6px; left: 0; right: 0;
     text-align: center;
     font-family: 'Frank Ruhl Libre', serif;
-    font-size: 12px; font-weight: 900;
+    font-size: 10px; font-weight: 900;
     color: #FFD760;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.95);
     line-height: 1;
   }
 
-  .book-h-tall { height: 104px; }
-  .book-h-mid  { height: 88px; }
-  .book-h-short{ height: 74px; }
+  .book-h-tall  { height: 82px; }
+  .book-h-mid   { height: 70px; }
+  .book-h-short { height: 58px; }
 
   /* MANAGER SCREEN */
   #screen-manager {
@@ -997,8 +1016,9 @@
   </div>
 
   <div class="bookshelf-wrap">
-    <div class="shelf-container">
-      <div class="shelf-label">✡ ספריית תהילים ✡</div>
+    <div class="bookcase-wrap" id="bookcaseWrap">
+      <img id="bookcaseClosed" class="bookcase-img" src="bookcase-closed.jpg" alt="ספרייה סגורה">
+      <img id="bookcaseOpen"   class="bookcase-img" src="bookcase-open.jpg"   alt="ספרייה פתוחה">
       <div id="bookshelfRows"></div>
     </div>
   </div>
@@ -1444,16 +1464,18 @@ function makeBook(heightClass, chLabel) {
   return book;
 }
 
-function renderBookshelf() {
-  const wrap = document.getElementById('bookshelfRows');
+function renderBookshelf(skipOpen) {
+  const wrap    = document.getElementById('bookshelfRows');
+  const cabinet = document.getElementById('bookcaseWrap');
   wrap.innerHTML = '';
 
   const a = state.currentUser && state.assignments[state.currentUser.id];
   if (a) {
+    if (!skipOpen && cabinet) cabinet.classList.add('open');
     const BOOKS_PER_ROW = 5;
     const chapters = [];
     for (let i = a.start; i <= a.end; i++) chapters.push(i);
-    const numRows = Math.ceil(chapters.length / BOOKS_PER_ROW);
+    const numRows = Math.min(Math.ceil(chapters.length / BOOKS_PER_ROW), 3);
     for (let r = 0; r < numRows; r++) {
       const rowEl = document.createElement('div');
       rowEl.className = 'shelf-row';
@@ -1465,17 +1487,8 @@ function renderBookshelf() {
     return;
   }
 
-  const heights = ['book-h-tall','book-h-mid','book-h-short'];
-  for (let row = 0; row < 3; row++) {
-    const rowEl = document.createElement('div');
-    rowEl.className = 'shelf-row';
-    const count = 5;
-    for (let b = 0; b < count; b++) {
-      const h = heights[(row + b) % heights.length];
-      rowEl.appendChild(makeBook(h, null));
-    }
-    wrap.appendChild(rowEl);
-  }
+  // ארון סגור — ללא ספרים
+  if (cabinet) cabinet.classList.remove('open');
 }
 
 // ===== NAVIGATION BACK =====
@@ -2643,7 +2656,11 @@ function fbLoadAssignments() {
 function flyBooksToShelf(count) {
   const cardEl  = document.querySelector('.floating-card-wrap');
   const wrap    = document.getElementById('bookshelfRows');
+  const cabinet = document.getElementById('bookcaseWrap');
   if (!cardEl || !wrap) return;
+
+  // פתח את הארון לפני שהספרים נכנסים
+  if (cabinet) cabinet.classList.add('open');
 
   const a = state.currentUser && state.assignments[state.currentUser.id];
   if (!a) return;

@@ -1,11 +1,13 @@
-const CACHE_NAME = 'tehilim-beyahad-v61';
+const CACHE_NAME = 'tehilim-beyahad-v62';
 const ASSETS = [
   '/tehilim-beyahad/',
   '/tehilim-beyahad/manifest.json',
   '/tehilim-beyahad/icon-192.png',
   '/tehilim-beyahad/icon-512.png',
   '/tehilim-beyahad/apple-touch-icon.png',
-  '/tehilim-beyahad/psalms_hebrew.json'
+  '/tehilim-beyahad/psalms_hebrew.json',
+  '/tehilim-beyahad/bookcase-closed.jpg',
+  '/tehilim-beyahad/bookcase-open.jpg'
 ];
 
 // skipWaiting מיידי — לא מחכה ל-cache.addAll
