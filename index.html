@@ -530,6 +530,44 @@
   .phone-link { color: var(--mid); text-decoration: none; font-weight: 700; }
   .phone-link:active { opacity: 0.7; }
 
+  /* EXIT CONFIRMATION DIALOG */
+  .exit-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .exit-overlay.open { opacity: 1; pointer-events: all; }
+  .exit-dialog {
+    background: linear-gradient(160deg, #fefefe, #f5f0ff);
+    border-radius: 22px; padding: 32px 28px 24px;
+    text-align: center; width: min(320px, 88vw);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    transform: scale(0.85); transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .exit-overlay.open .exit-dialog { transform: scale(1); }
+  .exit-dialog-title {
+    font-size: 19px; font-weight: 800; color: var(--deep); margin-bottom: 10px;
+  }
+  .exit-dialog-text {
+    font-size: 14px; color: var(--mid); margin-bottom: 26px; line-height: 1.5;
+  }
+  .exit-dialog-btns {
+    display: flex; gap: 12px; justify-content: center;
+  }
+  .exit-btn-cancel {
+    flex: 1; padding: 13px; border-radius: 14px; border: none; cursor: pointer;
+    background: rgba(101,60,20,0.10); color: var(--deep);
+    font-size: 15px; font-weight: 700;
+  }
+  .exit-btn-confirm {
+    flex: 1; padding: 13px; border-radius: 14px; border: none; cursor: pointer;
+    background: linear-gradient(135deg, #c94444, #a03030);
+    color: white; font-size: 15px; font-weight: 700;
+    box-shadow: 0 4px 14px rgba(180,40,40,0.35);
+  }
+
   /* NOTIFICATIONS */
   .toast {
     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
@@ -1201,7 +1239,17 @@ function saveToStorage() {
 function loadFromStorage() {
   try {
     const members = localStorage.getItem('tehilim_members');
-    if (members) state.members = JSON.parse(members);
+    if (members) {
+      const parsed = JSON.parse(members);
+      // Deduplicate by phone (keep first occurrence)
+      const seen = new Set();
+      state.members = parsed.filter(m => {
+        const key = m.phone || m.id;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
     const user = localStorage.getItem('tehilim_currentUser');
     if (user) state.currentUser = JSON.parse(user);
     const manager = localStorage.getItem('tehilim_manager');
@@ -1532,15 +1580,38 @@ function bindEvents() {
   // Bookshelf → open all assigned chapters
   document.querySelector('#screen-home .bookshelf-wrap').addEventListener('click', showAllChapters);
 
+  // Exit dialog buttons
+  document.getElementById('exitCancel').addEventListener('click', () => {
+    document.getElementById('exitOverlay').classList.remove('open');
+    history.pushState({ screen: 'screen-welcome' }, '');
+  });
+  document.getElementById('exitConfirm').addEventListener('click', () => {
+    document.getElementById('exitOverlay').classList.remove('open');
+    // Try to close the PWA/tab; fallback: stay
+    try { window.close(); } catch(e) {}
+    // On Android PWA, go back past our history to trigger system exit
+    history.go(-(history.length));
+  });
+
   // Hardware back button
   window.addEventListener('popstate', (e) => {
     const screenId = e.state?.screen;
+    const current = document.querySelector('.screen.active')?.id;
+
+    // At root (welcome) with no prior screen → show exit dialog
+    if (!screenId || screenId === 'screen-welcome') {
+      if (current === 'screen-welcome') {
+        history.pushState({ screen: 'screen-welcome' }, '');
+        document.getElementById('exitOverlay').classList.add('open');
+        return;
+      }
+    }
+
     if (!screenId) {
-      // Before initial state — stay on welcome
       history.pushState({ screen: 'screen-welcome' }, '');
       return;
     }
-    const current = document.querySelector('.screen.active')?.id;
+
     if (current === 'screen-reader') stopAutoScroll();
     _navFromHistory = true;
     if (screenId === 'screen-home' && state.currentUser) {
@@ -1560,6 +1631,20 @@ function doRegister() {
   const ln = document.getElementById('regLastName').value.trim();
   const ph = document.getElementById('regPhone').value.trim();
   if (!fn || !ln) { showToast('⚠️ אנא מלאי שם ושם משפחה'); return; }
+
+  // Prevent duplicate registration by phone
+  if (ph) {
+    const existing = state.members.find(m => m.phone === ph);
+    if (existing) {
+      state.currentUser = existing;
+      saveToStorage();
+      document.getElementById('modalRegister').classList.remove('open');
+      updateHomeCard(existing);
+      updateAssignmentDisplay();
+      showScreen('screen-home');
+      return;
+    }
+  }
 
   const avatarIdx = state.selectedAvatarIdx ?? 0;
   const newMember = { id: Date.now(), firstName: fn, lastName: ln, phone: ph, avatarIdx, photo: state.userPhoto };
@@ -2050,6 +2135,18 @@ function showToast(msg) {
 
 init();
 </script>
+
+<!-- ===== EXIT CONFIRMATION DIALOG ===== -->
+<div class="exit-overlay" id="exitOverlay">
+  <div class="exit-dialog">
+    <div class="exit-dialog-title">יציאה מהאפליקציה</div>
+    <div class="exit-dialog-text">האם ברצונך לצאת מהאפליקציה?</div>
+    <div class="exit-dialog-btns">
+      <button class="exit-btn-cancel" id="exitCancel">ביטול</button>
+      <button class="exit-btn-confirm" id="exitConfirm">אישור</button>
+    </div>
+  </div>
+</div>
 
 <!-- PWA Service Worker Registration -->
 <script>
