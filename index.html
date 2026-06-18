@@ -856,6 +856,14 @@
     border: 1px solid rgba(201,168,76,0.4);
   }
 
+  .custom-count-badge {
+    display: inline-block; margin-top: 4px; margin-right: 4px;
+    background: linear-gradient(135deg, rgba(120,200,255,0.8), rgba(80,160,255,0.8));
+    color: #fff; font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+    border: 1px solid rgba(80,160,255,0.5);
+  }
+
   /* MY CHAPTERS CARD ON HOME SCREEN */
   .my-chapters-card {
     margin: 0 20px 16px; padding: 16px 20px;
@@ -1348,12 +1356,15 @@ let state = {
   currentUser: null,
   currentManager: null,
   assignments: {},
+  customChapterCounts: {},
   tehilim: null,
   userPhoto: null,
   editingMember: null,
   editPhoto: null,
   editAvatarIdx: null,
 };
+
+let _customChaptersMember = null;
 
 // ===== LOCALSTORAGE =====
 function saveToStorage() {
@@ -1660,6 +1671,25 @@ function bindEvents() {
   mgBtn.addEventListener('mouseleave', cancelHold);
   mgBtn.addEventListener('touchend', cancelHold);
   mgBtn.addEventListener('touchcancel', cancelHold);
+
+  // Custom chapters dialog
+  document.getElementById('customChaptersConfirm').addEventListener('click', () => {
+    if (!_customChaptersMember) return;
+    const val = parseInt(document.getElementById('customChaptersInput').value);
+    if (isNaN(val) || val < 1 || val > 149) { showToast('⚠️ יש להזין מספר בין 1 ל-149'); return; }
+    state.customChapterCounts[_customChaptersMember.id] = val;
+    document.getElementById('customChaptersOverlay').classList.remove('open');
+    renderManagerList();
+    showToast(`✅ ${_customChaptersMember.firstName} תקבל ${val} פרקים`);
+  });
+  document.getElementById('customChaptersClear').addEventListener('click', () => {
+    if (_customChaptersMember) delete state.customChapterCounts[_customChaptersMember.id];
+    document.getElementById('customChaptersOverlay').classList.remove('open');
+    if (_customChaptersMember) renderManagerList();
+  });
+  document.getElementById('customChaptersCancel').addEventListener('click', () => {
+    document.getElementById('customChaptersOverlay').classList.remove('open');
+  });
 
   // Send chapters
   document.getElementById('btnSendChapters').addEventListener('click', doSendChapters);
@@ -2110,7 +2140,9 @@ function renderManagerList() {
     const statusBadge = st && st.finished
       ? '<span class="status-done">✅ סיימה</span>'
       : st && st.joined ? '<span class="status-joined">📿 קוראת</span>' : '';
-    nameDiv.innerHTML = `<strong>${m.firstName} ${m.lastName}</strong><span>${m.phone || ''}</span>${chapterBadge}${statusBadge}`;
+    const customCount = state.customChapterCounts[m.id];
+    const customBadge = customCount ? `<span class="custom-count-badge">✏️ ${customCount} פרקים</span>` : '';
+    nameDiv.innerHTML = `<strong>${m.firstName} ${m.lastName}</strong><span>${m.phone || ''}</span>${chapterBadge}${statusBadge}${customBadge}`;
 
     const circle = document.createElement('div');
     circle.className = 'member-select-circle';
@@ -2136,6 +2168,18 @@ function renderManagerList() {
     if (st && st.finished) joinCheck.textContent = '✅';
     else if (st && st.joined) joinCheck.textContent = '✅';
 
+    // Long-press → custom chapter count dialog
+    let _pressTimer = null;
+    const startPress = () => { _pressTimer = setTimeout(() => openCustomChaptersDialog(m), 600); };
+    const cancelPress = () => clearTimeout(_pressTimer);
+    row.addEventListener('touchstart', startPress, { passive: true });
+    row.addEventListener('touchend', cancelPress);
+    row.addEventListener('touchmove', cancelPress);
+    row.addEventListener('touchcancel', cancelPress);
+    row.addEventListener('mousedown', startPress);
+    row.addEventListener('mouseup', cancelPress);
+    row.addEventListener('mouseleave', cancelPress);
+
     row.appendChild(avatarDiv);
     row.appendChild(nameDiv);
     row.appendChild(pencilBtn);
@@ -2145,6 +2189,14 @@ function renderManagerList() {
   });
 
   document.getElementById('selectedCount').textContent = state.selectedForSession.size;
+}
+
+function openCustomChaptersDialog(m) {
+  _customChaptersMember = m;
+  document.getElementById('customChaptersName').textContent = `${m.firstName} ${m.lastName}`;
+  const current = state.customChapterCounts[m.id];
+  document.getElementById('customChaptersInput').value = current || '';
+  document.getElementById('customChaptersOverlay').classList.add('open');
 }
 
 function openMemberDetail(m) {
@@ -2305,6 +2357,7 @@ function doResetChapters() {
         if (done === assignedMembers.length) {
           state.assignments = {};
           state.selectedForSession = new Set();
+          state.customChapterCounts = {};
           localStorage.removeItem('tehilim_assignments');
           renderManagerList();
           document.getElementById('selectedCount').textContent = '0';
@@ -2328,14 +2381,30 @@ function doSendChapters() {
   }
 
   const TOTAL = 150;
-  const perPerson = Math.ceil(TOTAL / allParticipants.length);
+
+  // חישוב קצאות מותאמות אישית
+  let customTotal = 0;
+  allParticipants.forEach(m => {
+    const c = state.customChapterCounts[m.id];
+    if (c && c > 0) customTotal += c;
+  });
+  const regularMembers = allParticipants.filter(m => !state.customChapterCounts[m.id]);
+  const remaining = TOTAL - customTotal;
+  if (remaining < 0) { showToast('⚠️ סך הקצאות המותאמות עולה על 150 פרקים'); return; }
+  const perPerson = regularMembers.length > 0 ? Math.ceil(remaining / regularMembers.length) : 0;
 
   // שמור חלוקה
   state.assignments = {};
-  allParticipants.forEach((m, i) => {
-    const start = i * perPerson + 1;
-    const end = Math.min((i + 1) * perPerson, TOTAL);
-    state.assignments[m.id] = { start, end };
+  let currentChapter = 1;
+  allParticipants.forEach(m => {
+    const custom = state.customChapterCounts[m.id];
+    const count = (custom && custom > 0) ? custom : perPerson;
+    const start = currentChapter;
+    const end = Math.min(currentChapter + count - 1, TOTAL);
+    if (start <= TOTAL) {
+      state.assignments[m.id] = { start, end };
+      currentChapter = end + 1;
+    }
   });
   saveToStorage();
   fbSaveAssignments(state.assignments);
@@ -2452,6 +2521,19 @@ window.addEventListener('load', init);
     <div class="exit-dialog-btns">
       <button class="exit-btn-cancel" id="exitCancel">ביטול</button>
       <button class="exit-btn-confirm" id="exitConfirm">אישור</button>
+    </div>
+  </div>
+</div>
+
+<div class="exit-overlay" id="customChaptersOverlay">
+  <div class="exit-dialog" style="background:rgba(0,0,0,0.70);border:1px solid rgba(255,255,255,0.08);box-shadow:0 24px 60px rgba(0,0,0,0.7);padding:36px 28px 28px;min-width:260px;">
+    <div class="exit-dialog-title" id="customChaptersName" style="color:#E8C97A;font-size:20px;margin-bottom:8px;"></div>
+    <div class="exit-dialog-text" style="color:rgba(255,255,255,0.75);font-size:14px;line-height:1.6;margin-bottom:16px;">כמה פרקים תקבל מתפללת זו?<br><small style="font-size:12px;opacity:0.6;">השאר/י ריק לחלוקה שווה</small></div>
+    <input type="number" id="customChaptersInput" min="1" max="149" placeholder="מספר פרקים" style="width:100%;padding:10px 14px;font-size:20px;text-align:center;border-radius:12px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;outline:none;box-sizing:border-box;margin-bottom:20px;">
+    <div class="exit-dialog-btns" style="gap:8px;">
+      <button class="exit-btn-cancel" id="customChaptersClear" style="font-size:13px;">ברירת מחדל</button>
+      <button class="exit-btn-cancel" id="customChaptersCancel">ביטול</button>
+      <button class="exit-btn-confirm" id="customChaptersConfirm">אישור</button>
     </div>
   </div>
 </div>
@@ -2872,6 +2954,7 @@ async function doEndSession() {
 
   // איפוס לוקל
   state.assignments = {};
+  state.customChapterCounts = {};
   window._fbStatuses = {};
   localStorage.removeItem('tehilim_assignments');
   saveToStorage();
