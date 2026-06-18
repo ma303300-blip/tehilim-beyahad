@@ -843,6 +843,11 @@
       <span>📤</span> שלחי פרקי תהילים
       <span class="selected-count" id="selectedCount">0</span>
     </button>
+    <button id="btnResetChapters" style="
+      background:rgba(200,50,50,0.12); border:1.5px solid rgba(200,50,50,0.35);
+      color:#c83232; border-radius:14px; padding:13px 14px;
+      font-size:18px; cursor:pointer; flex-shrink:0;
+    " title="איפוס פרקים">🔄</button>
     <button id="btnSelectManager" style="
       background:rgba(201,168,76,0.15); border:1.5px solid rgba(201,168,76,0.4);
       color:var(--gold); border-radius:14px; padding:13px 14px;
@@ -1322,6 +1327,7 @@ function bindEvents() {
 
   // Send chapters
   document.getElementById('btnSendChapters').addEventListener('click', doSendChapters);
+  document.getElementById('btnResetChapters').addEventListener('click', doResetChapters);
 
   // Back from distribution
   document.getElementById('btnBackFromDist').addEventListener('click', () => {
@@ -1633,6 +1639,50 @@ function exitManager() {
   localStorage.removeItem('tehilim_manager');
   document.getElementById('managerCardWrap').style.display = 'none';
   showToast('יצאת ממצב מנהלת');
+}
+
+function doResetChapters() {
+  const assignedMembers = state.members.filter(m => state.assignments[m.id]);
+  if (assignedMembers.length === 0) { showToast('אין פרקים לאיפוס'); return; }
+
+  const btn = document.getElementById('btnSendChapters');
+  const btnRect = btn.getBoundingClientRect();
+  const targetX = btnRect.left + btnRect.width / 2;
+  const targetY = btnRect.top + btnRect.height / 2;
+
+  let done = 0;
+  assignedMembers.forEach((m, i) => {
+    setTimeout(() => {
+      const row = document.querySelector(`.member-row[data-id="${m.id}"]`);
+      const sr = row ? row.getBoundingClientRect() : { left: targetX, top: targetY, width: 0, height: 0 };
+      const startX = sr.left + sr.width / 2;
+      const startY = sr.top + sr.height / 2;
+
+      const p = document.createElement('div');
+      p.className = 'chapter-particle';
+      p.textContent = '📖';
+      p.style.cssText = `left:${startX}px; top:${startY}px; transform:scale(1);`;
+      document.body.appendChild(p);
+
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        p.style.left = targetX + 'px';
+        p.style.top = targetY + 'px';
+        p.style.opacity = '0';
+        p.style.transform = 'scale(0.3)';
+      }));
+
+      setTimeout(() => {
+        p.remove();
+        done++;
+        if (done === assignedMembers.length) {
+          state.assignments = {};
+          localStorage.removeItem('tehilim_assignments');
+          renderManagerList();
+          showToast('✅ הפרקים אופסו');
+        }
+      }, 1200);
+    }, i * 150);
+  });
 }
 
 function doSendChapters() {
