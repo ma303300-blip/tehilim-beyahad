@@ -1661,14 +1661,14 @@ function doResetChapters() {
       const p = document.createElement('div');
       p.className = 'chapter-particle';
       p.textContent = '📖';
-      p.style.cssText = `left:${startX}px; top:${startY}px; transform:scale(1.4); opacity:1;`;
+      p.style.cssText = `left:${startX}px; top:${startY}px; transform:scale(2.8); opacity:1;`;
       document.body.appendChild(p);
 
       requestAnimationFrame(() => requestAnimationFrame(() => {
         p.style.left = targetX + 'px';
         p.style.top = targetY + 'px';
         p.style.opacity = '0';
-        p.style.transform = 'scale(0.15)';
+        p.style.transform = 'scale(0.3)';
       }));
 
       setTimeout(() => {
@@ -1732,14 +1732,14 @@ function animateSendChapters(participants, onComplete) {
       const p = document.createElement('div');
       p.className = 'chapter-particle';
       p.textContent = '📖';
-      p.style.cssText = `left:${startX}px; top:${startY}px; transform:scale(0.15); opacity:1;`;
+      p.style.cssText = `left:${startX}px; top:${startY}px; transform:scale(0.3); opacity:1;`;
       document.body.appendChild(p);
 
       requestAnimationFrame(() => requestAnimationFrame(() => {
         p.style.left = targetX + 'px';
         p.style.top = targetY + 'px';
         p.style.opacity = '0';
-        p.style.transform = 'scale(1.4)';
+        p.style.transform = 'scale(2.8)';
       }));
 
       setTimeout(() => {
