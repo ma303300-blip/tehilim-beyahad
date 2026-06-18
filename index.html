@@ -937,6 +937,17 @@
     </div>
   </div>
 
+  <!-- כפתור הצטרפות לקריאה -->
+  <div style="padding: 0 20px 10px;">
+    <button id="btnJoinTehilim" style="
+      width:100%; padding:13px; border:none; border-radius:14px;
+      font-family:inherit; font-size:15px; font-weight:700;
+      cursor:pointer; transition:background 0.3s, transform 0.15s;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    ">📿 מצטרפת לתהילים ביחד</button>
+  </div>
+
   <div class="my-chapters-card" id="myChaptersCard">
     <div class="my-chapters-title">📖 הפרקים שלי</div>
     <div class="my-chapters-range" id="myChaptersRange"></div>
@@ -1619,6 +1630,15 @@ function bindEvents() {
   // Home → back to welcome (without clearing user data)
   document.getElementById('btnExitHome').addEventListener('click', goBack);
 
+  document.getElementById('btnJoinTehilim').addEventListener('click', () => {
+    if (!state.currentUser) return;
+    const key = joinTodayKey() + '_' + state.currentUser.id;
+    if (localStorage.getItem(key) === '1') return; // already joined
+    localStorage.setItem(key, '1');
+    updateJoinButton();
+    showToast('✅ הצטרפת לתהילים ביחד!');
+  });
+
   // Bookshelf → open all assigned chapters
   document.querySelector('#screen-home .bookshelf-wrap').addEventListener('click', showAllChapters);
 
@@ -1711,6 +1731,27 @@ function updateHomeCard(member) {
     avatarEl.innerHTML = `<img src="${member.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
   } else {
     avatarEl.innerHTML = AVATARS[member.avatarIdx];
+  }
+  updateJoinButton();
+}
+
+function joinTodayKey() {
+  const d = new Date();
+  return `tehilim_joined_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
+}
+
+function updateJoinButton() {
+  const btn = document.getElementById('btnJoinTehilim');
+  if (!btn || !state.currentUser) return;
+  const joined = localStorage.getItem(joinTodayKey() + '_' + state.currentUser.id) === '1';
+  if (joined) {
+    btn.textContent = '✅ הצטרפת לקריאה היום!';
+    btn.style.background = 'rgba(30,160,60,0.90)';
+    btn.style.color = '#fff';
+  } else {
+    btn.innerHTML = '📿 מצטרפת לתהילים ביחד';
+    btn.style.background = 'rgba(90,60,180,0.85)';
+    btn.style.color = '#fff';
   }
 }
 

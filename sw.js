@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tehilim-beyahad-v32';
+const CACHE_NAME = 'tehilim-beyahad-v33';
 const ASSETS = [
   '/tehilim-beyahad/',
   '/tehilim-beyahad/index.html',
