@@ -1239,6 +1239,7 @@ function init() {
   }
 
   bindEvents();
+  history.replaceState({ screen: 'screen-welcome' }, '');
 }
 
 function generateStars() {
@@ -1530,6 +1531,28 @@ function bindEvents() {
 
   // Bookshelf → open all assigned chapters
   document.querySelector('#screen-home .bookshelf-wrap').addEventListener('click', showAllChapters);
+
+  // Hardware back button
+  window.addEventListener('popstate', (e) => {
+    const screenId = e.state?.screen;
+    if (!screenId) {
+      // Before initial state — stay on welcome
+      history.pushState({ screen: 'screen-welcome' }, '');
+      return;
+    }
+    const current = document.querySelector('.screen.active')?.id;
+    if (current === 'screen-reader') stopAutoScroll();
+    _navFromHistory = true;
+    if (screenId === 'screen-home' && state.currentUser) {
+      updateHomeCard(state.currentUser);
+      updateAssignmentDisplay();
+    } else if (screenId === 'screen-manager' && state.currentManager) {
+      renderManagerList();
+      renderManagerCard();
+    }
+    showScreen(screenId);
+    _navFromHistory = false;
+  });
 }
 
 function doRegister() {
@@ -1567,6 +1590,7 @@ let readerFontSize = parseInt(localStorage.getItem('tehilim_fontSize') || '20');
 let fontFadeTimer = null;
 let scrollInterval = null;
 let scrollPaused = false;
+let _navFromHistory = false;
 
 function applyFontSize() {
   document.querySelectorAll('.reader-verse-text').forEach(el => {
@@ -2004,7 +2028,9 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
-  localStorage.setItem('lastScreen', id);
+  if (!_navFromHistory) {
+    history.pushState({ screen: id }, '');
+  }
   if (id === 'screen-welcome') {
     const btn = document.getElementById('btnMemberRegister');
     if (state.currentUser) {
