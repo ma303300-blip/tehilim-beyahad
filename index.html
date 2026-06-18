@@ -1971,12 +1971,26 @@ function showAllChapters() {
   wakeControls();
 }
 
+function toHebNum(n) {
+  const vals = [100,90,80,70,60,50,40,30,20,10,9,8,7,6,5,4,3,2,1];
+  const lets = ['ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
+  if (n === 15) return 'ט״ו';
+  if (n === 16) return 'ט״ז';
+  let result = '';
+  for (let i = 0; i < vals.length; i++) {
+    while (n >= vals[i]) { result += lets[i]; n -= vals[i]; }
+  }
+  if (result.length > 1) result = result.slice(0,-1) + '״' + result.slice(-1);
+  else result += '׳';
+  return result;
+}
+
 function updateAssignmentDisplay() {
   const card = document.getElementById('myChaptersCard');
   if (!card || !state.currentUser) return;
   const a = state.assignments[state.currentUser.id];
   if (a) {
-    document.getElementById('myChaptersRange').textContent = `פרקים ${a.start}–${a.end}`;
+    document.getElementById('myChaptersRange').textContent = `פרקים ${toHebNum(a.start)}–${toHebNum(a.end)}`;
     document.getElementById('myChaptersCount').textContent = `${a.end - a.start + 1} פרקים`;
     card.style.display = 'block';
   } else {
