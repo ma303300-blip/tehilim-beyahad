@@ -1174,10 +1174,45 @@ function setDateInfo() {
   });
 }
 
+function toHebNum(n) {
+  const special = {15:'טו',16:'טז',115:'קטו',116:'קטז'};
+  if (special[n]) return special[n];
+  const vals = [400,300,200,100,90,80,70,60,50,40,30,20,10,9,8,7,6,5,4,3,2,1];
+  const letters = {400:'ת',300:'ש',200:'ר',100:'ק',90:'צ',80:'פ',70:'ע',60:'ס',50:'נ',40:'מ',30:'ל',20:'כ',10:'י',9:'ט',8:'ח',7:'ז',6:'ו',5:'ה',4:'ד',3:'ג',2:'ב',1:'א'};
+  let res = '', rem = n;
+  for (const v of vals) { while (rem >= v) { res += letters[v]; rem -= v; } }
+  return res;
+}
+
 function renderBookshelf() {
   const wrap = document.getElementById('bookshelfRows');
   const heights = ['book-h-tall','book-h-mid','book-h-short'];
   wrap.innerHTML = '';
+
+  const a = state.currentUser && state.assignments[state.currentUser.id];
+  if (a) {
+    const BOOKS_PER_ROW = 8;
+    const chapters = [];
+    for (let i = a.start; i <= a.end; i++) chapters.push(i);
+    const numRows = Math.ceil(chapters.length / BOOKS_PER_ROW);
+    for (let r = 0; r < numRows; r++) {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'shelf-row';
+      const rowChapters = chapters.slice(r * BOOKS_PER_ROW, (r + 1) * BOOKS_PER_ROW);
+      rowChapters.forEach((ch, b) => {
+        const book = document.createElement('div');
+        const colorSet = BOOK_COLORS[(r * 3 + b) % BOOK_COLORS.length];
+        const color = colorSet[b % colorSet.length];
+        book.className = `book book-h-tall`;
+        book.style.cssText = `background:linear-gradient(180deg,${lighten(color)},${color}); min-width:36px; flex:none;`;
+        book.innerHTML = `<div class="book-spine" style="font-size:7.5px; line-height:1.4;">תהילים<br><span style="font-size:12px; font-weight:900;">${toHebNum(ch)}</span></div>`;
+        rowEl.appendChild(book);
+      });
+      wrap.appendChild(rowEl);
+    }
+    return;
+  }
+
   for (let row = 0; row < 3; row++) {
     const rowEl = document.createElement('div');
     rowEl.className = 'shelf-row';
@@ -1388,6 +1423,7 @@ function updateAssignmentDisplay() {
   } else {
     card.style.display = 'none';
   }
+  renderBookshelf();
 }
 
 function openMemberLoginCard(member) {
