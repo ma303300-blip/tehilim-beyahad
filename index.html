@@ -379,7 +379,7 @@
     gap: 0px;
   }
   /* מיקום מדפים — לכוונן לפי מיקום בתמונה */
-  .shelf-row:nth-child(1) { top: 37%; }
+  .shelf-row:nth-child(1) { top: 21%; }
   .shelf-row:nth-child(2) { top: 52%; }
   .shelf-row:nth-child(3) { top: 71%; }
 
@@ -2664,7 +2664,7 @@ function flyBooksToShelf(count) {
 
   // 1. ריקון הספרייה — תתמלא תוך כדי
   wrap.innerHTML = '';
-  const BOOKS_PER_ROW = 7;
+  const BOOKS_PER_ROW = 6;
   const chapters = [];
   for (let i = a.start; i <= a.end; i++) chapters.push(i);
   const total = chapters.length;
