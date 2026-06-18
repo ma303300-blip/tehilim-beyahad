@@ -1324,16 +1324,9 @@ function init() {
   setDateInfo();
   loadFromStorage();
 
-  // טעינת חלוקת פרקים מ-Firebase אם אין בלוקל
-  if (Object.keys(state.assignments).length === 0) {
-    fbLoadAssignments().then(fbA => {
-      if (fbA) {
-        state.assignments = fbA;
-        saveToStorage();
-        if (state.currentUser) updateAssignmentDisplay();
-      }
-    });
-  }
+  // listeners בזמן אמת — מתעדכנים מיד בכל המכשירים
+  fbListenAssignments();
+  fbListenMembers();
 
   fetch('./psalms_hebrew.json')
     .then(r => r.json())
@@ -2542,6 +2535,19 @@ function fbLoadAssignments() {
   return window.db.collection('sessions').doc('current').get()
     .then(snap => snap.exists ? snap.data().assignments : null)
     .catch(e => { console.warn('fbLoadAssignments', e); return null; });
+}
+
+function fbListenAssignments() {
+  if (!window.db) return;
+  window.db.collection('sessions').doc('current').onSnapshot(snap => {
+    if (!snap.exists) return;
+    const fbA = snap.data().assignments;
+    if (!fbA) return;
+    state.assignments = fbA;
+    saveToStorage();
+    if (state.currentUser) updateAssignmentDisplay();
+    renderBookshelf();
+  }, e => console.warn('fbListenAssignments', e));
 }
 
 function fbSetJoinStatus(userId, joined) {
