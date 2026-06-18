@@ -661,6 +661,29 @@
   </div>
 </div>
 
+<!-- ===== MODAL: MEMBER LOGIN CARD ===== -->
+<div class="modal-overlay" id="modalMemberLogin">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">שלום 👋</div>
+      <button class="modal-close" id="closeMemberLogin">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="member-card" id="loginCard" style="cursor:pointer; margin-bottom:16px;">
+        <div class="card-avatar" id="loginCardAvatar"></div>
+        <div class="card-info">
+          <div class="card-name" id="loginCardName"></div>
+          <div class="card-phone" id="loginCardPhone"></div>
+          <div class="card-badge">🕊️ מתפללת פעילה</div>
+        </div>
+        <button class="btn-edit-pencil" id="btnEditFromLogin" title="עריכה">✏️</button>
+      </div>
+      <button class="btn-register" id="btnEnterFromLogin">כניסה לדף הבית ✨</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== MODAL: MEMBER REGISTRATION ===== -->
 <div class="modal-overlay" id="modalRegister">
   <div class="modal-box">
@@ -1141,11 +1164,26 @@ function bindEvents() {
   // Welcome → Register
   document.getElementById('btnMemberRegister').addEventListener('click', () => {
     if (state.currentUser) {
-      updateHomeCard(state.currentUser);
-      showScreen('screen-home');
+      openMemberLoginCard(state.currentUser);
     } else {
       document.getElementById('modalRegister').classList.add('open');
     }
+  });
+
+  document.getElementById('closeMemberLogin').addEventListener('click', () => {
+    document.getElementById('modalMemberLogin').classList.remove('open');
+  });
+
+  document.getElementById('btnEnterFromLogin').addEventListener('click', () => {
+    document.getElementById('modalMemberLogin').classList.remove('open');
+    updateHomeCard(state.currentUser);
+    showScreen('screen-home');
+  });
+
+  document.getElementById('btnEditFromLogin').addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('modalMemberLogin').classList.remove('open');
+    openEditModal(state.currentUser);
   });
   document.getElementById('closeRegister').addEventListener('click', () => {
     document.getElementById('modalRegister').classList.remove('open');
@@ -1289,6 +1327,18 @@ function updateHomeCard(member) {
   } else {
     avatarEl.innerHTML = AVATARS[member.avatarIdx];
   }
+}
+
+function openMemberLoginCard(member) {
+  document.getElementById('loginCardName').textContent = `${member.firstName} ${member.lastName}`;
+  document.getElementById('loginCardPhone').textContent = `📞 ${member.phone || 'לא הוזן'}`;
+  const avatarEl = document.getElementById('loginCardAvatar');
+  if (member.photo) {
+    avatarEl.innerHTML = `<img src="${member.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  } else {
+    avatarEl.innerHTML = AVATARS[member.avatarIdx];
+  }
+  document.getElementById('modalMemberLogin').classList.add('open');
 }
 
 function enterManagerMode() {
