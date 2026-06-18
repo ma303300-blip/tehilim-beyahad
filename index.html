@@ -2035,6 +2035,16 @@ function enterManagerMode() {
 }
 
 function renderManagerList() {
+  // מתפללות שהצטרפו נכנסות אוטומטית לבחירה
+  if (window._fbStatuses) {
+    Object.entries(window._fbStatuses).forEach(([uid, st]) => {
+      if (st.joined || st.finished) {
+        const member = state.members.find(m => String(m.id) === String(uid));
+        if (member) state.selectedForSession.add(member.id);
+      }
+    });
+  }
+
   const list = document.getElementById('membersList');
   list.innerHTML = '';
   document.getElementById('membersCountLabel').textContent = `(${state.members.length})`;
