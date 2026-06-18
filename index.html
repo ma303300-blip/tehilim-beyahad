@@ -2642,66 +2642,93 @@ function fbLoadAssignments() {
 
 function flyBooksToShelf(count) {
   const cardEl  = document.querySelector('.floating-card-wrap');
-  const shelfEl = document.querySelector('.bookshelf-wrap');
-  if (!cardEl || !shelfEl) return;
+  const wrap    = document.getElementById('bookshelfRows');
+  if (!cardEl || !wrap) return;
 
+  const a = state.currentUser && state.assignments[state.currentUser.id];
+  if (!a) return;
+
+  // 1. ריקון הספרייה — תתמלא תוך כדי
+  wrap.innerHTML = '';
+  const BOOKS_PER_ROW = 5;
+  const chapters = [];
+  for (let i = a.start; i <= a.end; i++) chapters.push(i);
+  const total = chapters.length;
+
+  // 2. בנה שורות ריקות עם slots — כל slot הוא invisible wrapper
+  const numRows = Math.ceil(total / BOOKS_PER_ROW);
+  const slots   = [];
+  for (let r = 0; r < numRows; r++) {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'shelf-row';
+    const rowChapters = chapters.slice(r * BOOKS_PER_ROW, (r + 1) * BOOKS_PER_ROW);
+    rowChapters.forEach(ch => {
+      const slot = document.createElement('div');
+      slot.style.cssText = 'display:inline-block; opacity:0; transform:scale(0); transition: none;';
+      const bookEl = makeBook('book-h-tall', toHebNum(ch));
+      slot.appendChild(bookEl);
+      rowEl.appendChild(slot);
+      slots.push(slot);
+    });
+    wrap.appendChild(rowEl);
+  }
+
+  // 3. קבל מיקום הכרטיסייה
   const from  = cardEl.getBoundingClientRect();
-  const to    = shelfEl.getBoundingClientRect();
-  const total = Math.min(count, 14);
-
   const fromX = from.left + from.width  / 2;
   const fromY = from.top  + from.height / 2;
 
-  const COLORS  = ['#8B4513','#5C3317','#6B2D0E','#7A3B1E','#4A2208'];
-  const ACCENTS = ['#C9A84C','#E8C97A','#B8902A','#D4A840','#C0963C'];
+  // 4. לכל ספר — עוף ממיקום הכרטיסייה לslot שלו
+  function animateOneBook(idx) {
+    const slot = slots[idx];
+    if (!slot) return;
 
-  function animateBook(el, sx, sy, ex, ey, waveDir, delay) {
-    setTimeout(() => {
-      const duration = 900;
-      const t0 = performance.now();
-      function frame(now) {
-        const raw    = Math.min((now - t0) / duration, 1);
-        // easeInOutCubic
-        const t      = raw < 0.5 ? 4*raw*raw*raw : 1 - Math.pow(-2*raw+2,3)/2;
-        // גל ימינה-שמאלה: 2.5 מחזורים שדועכים ככל שמתקרבים
-        const wave   = waveDir * 55 * Math.sin(raw * Math.PI * 2.5) * (1 - raw);
-        const x      = sx + (ex - sx) * t + wave;
-        const y      = sy + (ey - sy) * t;
-        const scale  = 0.12 + 0.88 * t;
-        const rotate = waveDir * 18 * Math.sin(raw * Math.PI * 2.5) * (1 - raw);
-        el.style.left      = x + 'px';
-        el.style.top       = y + 'px';
-        el.style.transform = `translate(-50%,-50%) scale(${scale}) rotate(${rotate}deg)`;
-        if (raw < 1) { requestAnimationFrame(frame); return; }
-        el.style.transition = 'opacity 0.25s';
-        el.style.opacity    = '0';
-        setTimeout(() => el.remove(), 280);
-      }
-      requestAnimationFrame(frame);
-    }, delay);
+    // חכה שה-DOM יצייר את ה-slot כדי לקבל מיקום אמיתי
+    const slotRect = slot.getBoundingClientRect();
+    const destX    = slotRect.left + slotRect.width  / 2;
+    const destY    = slotRect.top  + slotRect.height / 2;
+    const waveDir  = (idx % 2 === 0) ? 1 : -1;
+
+    // יצור ספר מעופף
+    const flyer = document.createElement('div');
+    flyer.style.cssText = `
+      position:fixed; left:${fromX}px; top:${fromY}px;
+      width:22px; height:30px;
+      background: linear-gradient(135deg,#8B4513,#5C2A08);
+      border-radius:2px 5px 5px 2px;
+      border-right:4px solid #C9A84C;
+      border-left:2px solid rgba(0,0,0,0.3);
+      box-shadow:inset -3px 0 6px rgba(0,0,0,0.3),2px 3px 12px rgba(0,0,0,0.55);
+      z-index:8000; pointer-events:none;
+      transform:translate(-50%,-50%) scale(0.12);
+    `;
+    document.body.appendChild(flyer);
+
+    const duration = 850;
+    const t0 = performance.now();
+
+    function frame(now) {
+      const raw = Math.min((now - t0) / duration, 1);
+      const t   = raw < 0.5 ? 4*raw*raw*raw : 1 - Math.pow(-2*raw+2,3)/2;
+      const wave   = waveDir * 52 * Math.sin(raw * Math.PI * 2.5) * (1 - raw);
+      const rotate = waveDir * 20 * Math.sin(raw * Math.PI * 2.5) * (1 - raw);
+      flyer.style.left      = (fromX + (destX - fromX) * t + wave) + 'px';
+      flyer.style.top       = (fromY + (destY - fromY) * t) + 'px';
+      flyer.style.transform = `translate(-50%,-50%) scale(${0.12 + 0.88 * t}) rotate(${rotate}deg)`;
+
+      if (raw < 1) { requestAnimationFrame(frame); return; }
+
+      // נחיתה — מסיר הflyer, מדליק הספר בספרייה
+      flyer.remove();
+      slot.style.transition = 'opacity 0.18s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1)';
+      slot.style.opacity    = '1';
+      slot.style.transform  = 'scale(1)';
+    }
+    requestAnimationFrame(frame);
   }
 
   for (let i = 0; i < total; i++) {
-    const col   = i % COLORS.length;
-    const el    = document.createElement('div');
-    el.style.cssText = `
-      position:fixed; left:${fromX}px; top:${fromY}px;
-      width:22px; height:30px;
-      background:${COLORS[col]};
-      border-radius:2px 5px 5px 2px;
-      border-right:4px solid ${ACCENTS[col]};
-      border-left:2px solid rgba(0,0,0,0.25);
-      box-shadow:inset -3px 0 6px rgba(0,0,0,0.3),2px 3px 10px rgba(0,0,0,0.5);
-      transform:translate(-50%,-50%) scale(0.12);
-      z-index:8000; pointer-events:none; opacity:1;
-    `;
-    document.body.appendChild(el);
-
-    const destX   = to.left + 24 + (i % 5) * ((to.width - 48) / 4);
-    const destY   = to.top  + 20 + Math.floor(i / 5) * 50;
-    const waveDir = (i % 2 === 0) ? 1 : -1;   // חלופי ימין-שמאל
-
-    animateBook(el, fromX, fromY, destX, destY, waveDir, i * 150);
+    setTimeout(() => animateOneBook(i), i * 140);
   }
 }
 
