@@ -84,28 +84,46 @@
     100% { opacity: 0.9; transform: scale(1.4); }
   }
 
-  @keyframes run-border {
-    0%   { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
+  #joinBtnWrap {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  @keyframes spin-border {
+    from { transform: translate(-50%,-50%) rotate(0deg); }
+    to   { transform: translate(-50%,-50%) rotate(360deg); }
   }
 
   #joinBtnWrap.joined {
-    padding: 3px;
-    background: linear-gradient(90deg,
-      #00e040 0%,
-      #00ff55 20%,
-      #006620 40%,
-      #00e040 60%,
-      #00ff55 80%,
-      #006620 100%
+    padding: 4px;
+    box-shadow: 0 0 18px rgba(0,220,60,0.55);
+  }
+
+  #joinBtnWrap.joined::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 300%; height: 300%;
+    background: conic-gradient(
+      transparent 0deg,
+      transparent 160deg,
+      #00ff55 160deg,
+      #44ff88 210deg,
+      #00dd44 230deg,
+      transparent 250deg
     );
-    background-size: 200% 100%;
-    animation: run-border 0.7s linear infinite;
-    box-shadow: 0 0 12px rgba(0,220,60,0.45);
+    animation: spin-border 1.2s linear infinite;
+    z-index: 0;
+  }
+
+  #joinBtnWrap #btnJoinTehilim {
+    position: relative;
+    z-index: 1;
   }
 
   #joinBtnWrap.joined #btnJoinTehilim {
-    border-radius: 11px;
+    border-radius: 12px !important;
   }
 
   .welcome-inner {
@@ -963,7 +981,7 @@
 
   <!-- כפתור הצטרפות לקריאה -->
   <div style="padding: 0 20px 10px;">
-    <div id="joinBtnWrap" style="border-radius:16px;">
+    <div id="joinBtnWrap">
       <button id="btnJoinTehilim" style="
         width:100%; padding:13px; border:none; border-radius:14px;
         font-family:inherit; font-size:15px; font-weight:700;
