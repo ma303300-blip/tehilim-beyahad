@@ -1633,10 +1633,15 @@ function bindEvents() {
   document.getElementById('btnJoinTehilim').addEventListener('click', () => {
     if (!state.currentUser) return;
     const key = joinTodayKey() + '_' + state.currentUser.id;
-    if (localStorage.getItem(key) === '1') return; // already joined
-    localStorage.setItem(key, '1');
+    const joined = localStorage.getItem(key) === '1';
+    if (joined) {
+      localStorage.removeItem(key);
+      showToast('❌ ביטלת את ההצטרפות');
+    } else {
+      localStorage.setItem(key, '1');
+      showToast('✅ הצטרפת לתהילים ביחד!');
+    }
     updateJoinButton();
-    showToast('✅ הצטרפת לתהילים ביחד!');
   });
 
   // Bookshelf → open all assigned chapters
@@ -1745,12 +1750,12 @@ function updateJoinButton() {
   if (!btn || !state.currentUser) return;
   const joined = localStorage.getItem(joinTodayKey() + '_' + state.currentUser.id) === '1';
   if (joined) {
-    btn.textContent = '✅ הצטרפת לקריאה היום!';
-    btn.style.background = 'rgba(30,160,60,0.90)';
+    btn.textContent = '✅ הצטרפתי לתהילים ביחד';
+    btn.style.background = 'rgba(34,160,60,0.92)';
     btn.style.color = '#fff';
   } else {
-    btn.innerHTML = '📿 מצטרפת לתהילים ביחד';
-    btn.style.background = 'rgba(90,60,180,0.85)';
+    btn.textContent = '📿 מצטרפת לתהילים ביחד';
+    btn.style.background = 'rgba(210,30,40,0.88)';
     btn.style.color = '#fff';
   }
 }
