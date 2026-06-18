@@ -84,54 +84,14 @@
     100% { opacity: 0.9; transform: scale(1.4); }
   }
 
-  #joinBtnWrap {
-    position: relative;
-    border-radius: 16px;
-    overflow: hidden;
-  }
-
-  @keyframes spin-comet {
-    from { transform: translate(-50%,-50%) rotate(0deg); }
-    to   { transform: translate(-50%,-50%) rotate(360deg); }
+  @keyframes blink-green {
+    0%, 100% { box-shadow: 0 0 0 3px #00dd55; }
+    50%       { box-shadow: 0 0 0 3px rgba(0,221,85,0.08); }
   }
 
   #joinBtnWrap.joined {
-    padding: 3px;
-    background: #0a1a0a;
-  }
-
-  /* שובל קומטה — ראש לבן-ירוק שדועך ל-transparent */
-  #joinBtnWrap.joined::before {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 280%; height: 280%;
-    background: conic-gradient(
-      from 0deg,
-      transparent         0deg,
-      transparent         200deg,
-      rgba(0,255,80,0.04) 220deg,
-      rgba(0,255,80,0.12) 240deg,
-      rgba(0,255,80,0.28) 265deg,
-      rgba(0,255,100,0.55) 290deg,
-      rgba(60,255,130,0.82) 320deg,
-      rgba(140,255,180,0.96) 348deg,
-      #ffffff             357deg,
-      #ffffff             360deg,
-      transparent         360deg
-    );
-    transform: translate(-50%,-50%) rotate(0deg);
-    animation: spin-comet 2.7s linear infinite;
-    z-index: 0;
-  }
-
-  #joinBtnWrap #btnJoinTehilim {
-    position: relative;
-    z-index: 1;
-  }
-
-  #joinBtnWrap.joined #btnJoinTehilim {
-    border-radius: 12px !important;
+    border-radius: 16px;
+    animation: blink-green 1.5s ease-in-out infinite;
   }
 
   .welcome-inner {
@@ -966,6 +926,11 @@
         <div class="date-day" id="homeDayName"></div>
         <div class="date-full" id="homeDateFull"></div>
       </div>
+      <button onclick="clearCacheAndReload()" style="
+        background:rgba(180,50,50,0.85); border:none; border-radius:10px;
+        padding:7px 10px; font-family:inherit; font-size:12px;
+        font-weight:700; color:#fff; cursor:pointer;
+      ">🗑️ קאש</button>
       <button id="btnExitHome" style="
         background:rgba(30,100,220,0.80); border:none; border-radius:10px;
         padding:7px 12px; font-family:inherit; font-size:13px;
@@ -2298,6 +2263,18 @@ init();
 
 <!-- PWA Service Worker Registration -->
 <script>
+  async function clearCacheAndReload() {
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const r of regs) await r.unregister();
+      }
+      const keys = await caches.keys();
+      for (const k of keys) await caches.delete(k);
+    } catch(e) {}
+    location.reload(true);
+  }
+
   if ('serviceWorker' in navigator) {
     function activateWaiting(reg) {
       if (reg && reg.waiting) {
