@@ -67,7 +67,7 @@
   #screen-welcome {
     background: transparent;
     align-items: center; justify-content: flex-end;
-    padding: 0 20px 100px;
+    padding: env(safe-area-inset-top, 0px) 20px 100px;
     min-height: 100vh;
   }
 
@@ -95,7 +95,7 @@
   }
 
   #syncBar {
-    position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+    position: fixed; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
     z-index: 9999; display: flex; align-items: center; gap: 5px;
     padding: 4px 13px; border-radius: 20px;
     background: rgba(30,30,30,0.50); backdrop-filter: blur(6px);
@@ -276,7 +276,7 @@
   }
 
   .home-top {
-    padding: 16px 20px 0;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 20px 0;
     display: flex; justify-content: space-between; align-items: flex-start;
   }
   .bsd-top {
@@ -406,7 +406,7 @@
   }
 
   .manager-header {
-    padding: 16px 20px 0;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 20px 0;
     display: flex; justify-content: space-between; align-items: flex-start;
   }
 
@@ -485,7 +485,7 @@
   }
 
   .dist-header {
-    padding: 16px 20px 10px;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 20px 10px;
     display: flex; justify-content: space-between; align-items: center;
   }
   .dist-title {
@@ -736,7 +736,7 @@
   }
   .reader-header-row {
     display: flex; align-items: center; gap: 12px;
-    padding: 14px 20px; direction: rtl;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 20px 14px; direction: rtl;
   }
   .reader-header .btn-back { color: #6b3a1f; border-color: rgba(101,60,20,0.3); background: rgba(101,60,20,0.08); }
   .reader-title {
