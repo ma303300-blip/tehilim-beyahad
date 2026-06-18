@@ -1110,7 +1110,7 @@ function init() {
   }
 
   // Restore last screen
-  const lastScreen = sessionStorage.getItem('lastScreen');
+  const lastScreen = localStorage.getItem('lastScreen');
   if (lastScreen === 'screen-manager' && state.currentManager) {
     renderManagerList();
     renderManagerCard();
@@ -1705,7 +1705,7 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
-  sessionStorage.setItem('lastScreen', id);
+  localStorage.setItem('lastScreen', id);
   if (id === 'screen-welcome') {
     const btn = document.getElementById('btnMemberRegister');
     if (state.currentUser) {
