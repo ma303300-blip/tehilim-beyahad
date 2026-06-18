@@ -95,17 +95,19 @@
   }
 
   #syncBar {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
-    height: 24px; display: flex; align-items: center; justify-content: center;
-    gap: 6px; font-family: inherit; font-size: 11px; font-weight: 700;
-    color: #fff; background: rgba(80,80,80,0.82);
-    transition: background 0.5s ease;
-    pointer-events: none;
+    position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+    z-index: 9999; display: flex; align-items: center; gap: 5px;
+    padding: 4px 13px; border-radius: 20px;
+    background: rgba(30,30,30,0.50); backdrop-filter: blur(6px);
+    color: rgba(255,255,255,0.80); font-size: 11px; font-weight: 600;
+    pointer-events: none; white-space: nowrap; transition: opacity 0.4s;
   }
-  #syncDot { font-size: 9px; transition: color 0.5s; }
-  #syncBar.ok  { background: rgba(20,140,55,0.88); }
-  #syncBar.err { background: rgba(180,30,30,0.90); }
-  .screen { padding-bottom: 28px; }
+  #syncDot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #888; flex-shrink: 0; transition: background 0.4s;
+  }
+  #syncBar.ok  #syncDot { background: #22dd66; }
+  #syncBar.err #syncDot { background: #ff4040; }
 
   .welcome-inner {
     display: flex; flex-direction: column; align-items: center;
