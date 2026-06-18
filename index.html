@@ -194,7 +194,12 @@
     background: var(--cream); border-radius: 28px 28px 0 0;
     width: 100%; max-width: 480px; max-height: 92vh;
     padding: 0 0 30px 0; overflow-y: auto;
-    animation: slide-up 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    animation: modal-zoom-in 0.45s cubic-bezier(0.34,1.2,0.64,1);
+  }
+
+  @keyframes modal-zoom-in {
+    from { transform: scale(0.72); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
   }
 
   @keyframes slide-up {
@@ -562,7 +567,7 @@
     background: var(--cream); border-radius: 28px 28px 0 0;
     width: 100%; max-width: 480px;
     padding: 0 24px 30px;
-    animation: slide-up 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    animation: modal-zoom-in 0.45s cubic-bezier(0.34,1.2,0.64,1);
   }
 
   .detail-avatar-wrap {
@@ -611,9 +616,10 @@
     border-radius: 22px; padding: 32px 28px 24px;
     text-align: center; width: min(320px, 88vw);
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    transform: scale(0.85); transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    transform: scale(0.72); opacity: 0;
+    transition: transform 0.45s cubic-bezier(0.34,1.2,0.64,1), opacity 0.35s ease;
   }
-  .exit-overlay.open .exit-dialog { transform: scale(1); }
+  .exit-overlay.open .exit-dialog { transform: scale(1); opacity: 1; }
   .exit-dialog-title {
     font-size: 19px; font-weight: 800; color: var(--deep); margin-bottom: 10px;
   }
@@ -2399,7 +2405,7 @@ window.addEventListener('load', init);
 <!-- ===== RESET SESSION DIALOG ===== -->
 <div class="exit-overlay" id="resetOverlay">
   <div class="exit-dialog" style="
-    background: rgba(0,0,0,0.80);
+    background: rgba(0,0,0,0.85);
     backdrop-filter: blur(16px);
     border: 1px solid rgba(255,255,255,0.08);
     box-shadow: 0 24px 60px rgba(0,0,0,0.7);
