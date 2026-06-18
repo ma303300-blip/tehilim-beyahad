@@ -1676,8 +1676,10 @@ function doResetChapters() {
         done++;
         if (done === assignedMembers.length) {
           state.assignments = {};
+          state.selectedForSession = new Set();
           localStorage.removeItem('tehilim_assignments');
           renderManagerList();
+          document.getElementById('selectedCount').textContent = '0';
           showToast('✅ הפרקים אופסו');
         }
       }, 1200);
