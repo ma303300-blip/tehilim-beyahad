@@ -2227,10 +2227,7 @@ init();
 
   window.addEventListener('load', () => {
     if (isIos()) showBanner('ios');
-    // Android fallback if beforeinstallprompt didn't fire yet
-    else if (isAndroid() && !deferredPrompt) {
-      setTimeout(() => showBanner('android'), 100);
-    }
+    // Android: banner shows only after beforeinstallprompt fires and sets deferredPrompt
   });
 
   // Refresh button — simple page reload without clearing session
