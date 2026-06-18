@@ -2170,6 +2170,9 @@ init();
         .then(() => console.log('SW registered'))
         .catch(err => console.log('SW error:', err));
     });
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
   }
 
   // iOS PWA: fix 100vh
