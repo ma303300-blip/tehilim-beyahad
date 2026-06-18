@@ -1288,6 +1288,7 @@ function init() {
 
   bindEvents();
   history.replaceState({ screen: 'screen-welcome' }, '');
+  history.pushState({ screen: 'screen-welcome' }, ''); // guard: 2 entries so first back stays in app
 }
 
 function generateStars() {
@@ -1594,35 +1595,41 @@ function bindEvents() {
   });
 
   // Hardware back button
-  window.addEventListener('popstate', (e) => {
-    const screenId = e.state?.screen;
+  window.addEventListener('popstate', () => {
     const current = document.querySelector('.screen.active')?.id;
 
-    // At root (welcome) with no prior screen → show exit dialog
-    if (!screenId || screenId === 'screen-welcome') {
-      if (current === 'screen-welcome') {
-        history.pushState({ screen: 'screen-welcome' }, '');
-        document.getElementById('exitOverlay').classList.add('open');
-        return;
-      }
-    }
-
-    if (!screenId) {
+    // Already on welcome → show exit dialog, re-push guard
+    if (current === 'screen-welcome') {
       history.pushState({ screen: 'screen-welcome' }, '');
+      document.getElementById('exitOverlay').classList.add('open');
       return;
     }
 
+    // Navigate one step back based on current screen
+    const target = (() => {
+      if (current === 'screen-reader') return 'screen-home';
+      if (current === 'screen-home')    return 'screen-welcome';
+      if (current === 'screen-manager') return 'screen-welcome';
+      if (current === 'screen-dist')    return 'screen-manager';
+      return 'screen-welcome';
+    })();
+
     if (current === 'screen-reader') stopAutoScroll();
     _navFromHistory = true;
-    if (screenId === 'screen-home' && state.currentUser) {
+    if (target === 'screen-home' && state.currentUser) {
       updateHomeCard(state.currentUser);
       updateAssignmentDisplay();
-    } else if (screenId === 'screen-manager' && state.currentManager) {
+    } else if (target === 'screen-manager' && state.currentManager) {
       renderManagerList();
       renderManagerCard();
     }
-    showScreen(screenId);
+    showScreen(target);
     _navFromHistory = false;
+
+    // If arrived at welcome, push guard so next back triggers exit dialog
+    if (target === 'screen-welcome') {
+      history.pushState({ screen: 'screen-welcome' }, '');
+    }
   });
 }
 
