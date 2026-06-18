@@ -2540,20 +2540,6 @@ window.addEventListener('load', init);
     // Android: banner shows only after beforeinstallprompt fires and sets deferredPrompt
   });
 
-  // Prevent pull-to-refresh on Android (but allow normal downward scroll)
-  let _touchStartY = 0;
-  document.body.addEventListener('touchstart', function(e) {
-    _touchStartY = e.touches[0].clientY;
-  }, { passive: true });
-
-  document.body.addEventListener('touchmove', function(e) {
-    if (e.touches.length === 1) {
-      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-      const touchDelta = e.touches[0].clientY - _touchStartY;
-      // Only prevent pull-to-refresh: at top AND finger moving downward
-      if (scrollTop === 0 && touchDelta > 0) e.preventDefault();
-    }
-  }, { passive: false });
 </script>
 
 
