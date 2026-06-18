@@ -2410,7 +2410,13 @@ window.addEventListener('load', init);
 
 <!-- PWA Service Worker Registration -->
 <script>
+  let _clearingCache = false;
+
   async function clearCacheAndReload() {
+    if (_clearingCache) return;
+    _clearingCache = true;
+    if (typeof showToast === 'function') showToast('🗑️ מנקה קאש...');
+    await new Promise(r => setTimeout(r, 350));
     try {
       if ('serviceWorker' in navigator) {
         const regs = await navigator.serviceWorker.getRegistrations();
@@ -2441,9 +2447,9 @@ window.addEventListener('load', init);
         });
       }).catch(err => console.log('SW error:', err));
     });
-    // כשה-SW מתחלף — טען מחדש
+    // כשה-SW מתחלף — טען מחדש (לא במהלך ניקוי ידני)
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
+      if (!_clearingCache) window.location.reload();
     });
   }
 
