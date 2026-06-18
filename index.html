@@ -84,16 +84,28 @@
     100% { opacity: 0.9; transform: scale(1.4); }
   }
 
-  @keyframes green-pulse-border {
-    0%   { box-shadow: 0 0 0 0px rgba(50,210,80,0.9), 0 4px 14px rgba(0,0,0,0.25); }
-    50%  { box-shadow: 0 0 0 5px rgba(50,210,80,0.35), 0 4px 14px rgba(0,0,0,0.25); }
-    100% { box-shadow: 0 0 0 0px rgba(50,210,80,0.0), 0 4px 14px rgba(0,0,0,0.25); }
+  @keyframes run-border {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
   }
 
-  #btnJoinTehilim.joined {
-    animation: green-pulse-border 1.4s ease-in-out infinite;
-    outline: 2.5px solid rgba(60,220,90,0.85);
-    outline-offset: 2px;
+  #joinBtnWrap.joined {
+    padding: 3px;
+    background: linear-gradient(90deg,
+      #00e040 0%,
+      #00ff55 20%,
+      #006620 40%,
+      #00e040 60%,
+      #00ff55 80%,
+      #006620 100%
+    );
+    background-size: 200% 100%;
+    animation: run-border 0.7s linear infinite;
+    box-shadow: 0 0 12px rgba(0,220,60,0.45);
+  }
+
+  #joinBtnWrap.joined #btnJoinTehilim {
+    border-radius: 11px;
   }
 
   .welcome-inner {
@@ -951,13 +963,15 @@
 
   <!-- כפתור הצטרפות לקריאה -->
   <div style="padding: 0 20px 10px;">
-    <button id="btnJoinTehilim" style="
-      width:100%; padding:13px; border:none; border-radius:14px;
-      font-family:inherit; font-size:15px; font-weight:700;
-      cursor:pointer; transition:background 0.3s, transform 0.15s;
-      display:flex; align-items:center; justify-content:center; gap:8px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-    ">📿 מצטרפת לתהילים ביחד</button>
+    <div id="joinBtnWrap" style="border-radius:16px;">
+      <button id="btnJoinTehilim" style="
+        width:100%; padding:13px; border:none; border-radius:14px;
+        font-family:inherit; font-size:15px; font-weight:700;
+        cursor:pointer; transition:background 0.3s, transform 0.15s;
+        display:flex; align-items:center; justify-content:center; gap:8px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+      ">📿 מצטרפת לתהילים ביחד</button>
+    </div>
   </div>
 
   <div class="my-chapters-card" id="myChaptersCard">
@@ -1759,18 +1773,19 @@ function joinTodayKey() {
 
 function updateJoinButton() {
   const btn = document.getElementById('btnJoinTehilim');
+  const wrap = document.getElementById('joinBtnWrap');
   if (!btn || !state.currentUser) return;
   const joined = localStorage.getItem(joinTodayKey() + '_' + state.currentUser.id) === '1';
   if (joined) {
     btn.textContent = '✅ הצטרפתי לתהילים ביחד';
     btn.style.background = 'rgba(34,160,60,0.92)';
     btn.style.color = '#fff';
-    btn.classList.add('joined');
+    wrap.classList.add('joined');
   } else {
     btn.textContent = '📿 מצטרפת לתהילים ביחד';
     btn.style.background = 'rgba(210,30,40,0.88)';
     btn.style.color = '#fff';
-    btn.classList.remove('joined');
+    wrap.classList.remove('joined');
   }
 }
 
