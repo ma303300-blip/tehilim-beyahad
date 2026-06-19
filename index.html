@@ -1420,14 +1420,13 @@ let _customChaptersMember = null;
 
 // ===== LOCALSTORAGE =====
 function saveToStorage() {
-  try {
-    localStorage.setItem('tehilim_members', JSON.stringify(state.members));
-    if (state.currentUser) localStorage.setItem('tehilim_currentUser', JSON.stringify(state.currentUser));
-    if (state.currentManager) localStorage.setItem('tehilim_manager', JSON.stringify(state.currentManager));
-    localStorage.setItem('tehilim_assignments', JSON.stringify(state.assignments));
-  } catch(e) {
-    console.warn('saveToStorage quota:', e);
-  }
+  // כל פריט נשמר בנפרד — כישלון של פריט אחד לא חוסם את השאר
+  const _s = (key, val) => { try { localStorage.setItem(key, val); } catch(e) { console.warn('saveToStorage', key, e); } };
+  if (state.currentManager) _s('tehilim_manager', JSON.stringify(state.currentManager));
+  else localStorage.removeItem('tehilim_manager');
+  if (state.currentUser) _s('tehilim_currentUser', JSON.stringify(state.currentUser));
+  _s('tehilim_assignments', JSON.stringify(state.assignments));
+  _s('tehilim_members', JSON.stringify(state.members));
 }
 
 function loadFromStorage() {
@@ -2428,6 +2427,14 @@ function exitManager() {
   fbClearManager();
   updateManagerBanner(null);
   showToast('יצאת ממצב מנהלת');
+  // ניווט חזרה — מנהלת שגם מתפללת → דף הבית, אחרת → ברוכות הבאות
+  if (state.currentUser) {
+    updateHomeCard(state.currentUser);
+    updateAssignmentDisplay();
+    showScreen('screen-home');
+  } else {
+    showScreen('screen-welcome');
+  }
 }
 
 function doResetChapters() {
