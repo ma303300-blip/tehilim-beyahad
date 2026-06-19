@@ -1423,7 +1423,6 @@ function saveToStorage() {
   // כל פריט נשמר בנפרד — כישלון של פריט אחד לא חוסם את השאר
   const _s = (key, val) => { try { localStorage.setItem(key, val); } catch(e) { console.warn('saveToStorage', key, e); } };
   if (state.currentManager) _s('tehilim_manager', JSON.stringify(state.currentManager));
-  else localStorage.removeItem('tehilim_manager');
   if (state.currentUser) _s('tehilim_currentUser', JSON.stringify(state.currentUser));
   _s('tehilim_assignments', JSON.stringify(state.assignments));
   _s('tehilim_members', JSON.stringify(state.members));
@@ -1475,7 +1474,7 @@ function init() {
   const lastScreen = localStorage.getItem('tehilim_lastScreen') || 'screen-welcome';
   history.replaceState({ depth: 1 }, '', '#screen-welcome');
 
-  if (lastScreen === 'screen-manager' && state.currentManager) {
+  if (lastScreen === 'screen-manager') {
     renderManagerCard();
     renderManagerList();
     fbListenMembers();
@@ -2933,7 +2932,7 @@ function fbSaveAssignments(assignments) {
   window.db.collection('sessions').doc('current').set({
     assignments,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).catch(e => console.warn('fbSaveAssignments', e));
+  }, { merge: true }).catch(e => console.warn('fbSaveAssignments', e));
 }
 
 function fbLoadAssignments() {
