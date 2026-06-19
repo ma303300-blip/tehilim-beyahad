@@ -1462,11 +1462,6 @@ function init() {
   if (typeof fbListenAssignments === 'function') fbListenAssignments();
   if (typeof fbListenMembers === 'function') fbListenMembers();
 
-  fetch('./psalms_hebrew.json')
-    .then(r => r.json())
-    .then(data => { state.tehilim = data; })
-    .catch(() => console.log('Psalms text not available'));
-
   renderBookshelf();
   bindEvents();
 
@@ -1474,12 +1469,29 @@ function init() {
   const lastScreen = localStorage.getItem('tehilim_lastScreen') || 'screen-welcome';
   history.replaceState({ depth: 1 }, '', '#screen-welcome');
 
+  const psalmsFetch = fetch('./psalms_hebrew.json')
+    .then(r => r.json())
+    .then(data => { state.tehilim = data; })
+    .catch(() => console.log('Psalms text not available'));
+
   if (lastScreen === 'screen-manager') {
     renderManagerCard();
     renderManagerList();
     fbListenMembers();
     fbListenReadingStatus();
     showScreen('screen-manager');
+  } else if (lastScreen === 'screen-reader' && state.currentUser && state.assignments[state.currentUser.id]) {
+    psalmsFetch.then(() => {
+      if (state.tehilim) {
+        showAllChapters();
+      } else {
+        updateHomeCard(state.currentUser);
+        updateAssignmentDisplay();
+        showScreen('screen-home');
+      }
+    });
+  } else if (lastScreen === 'screen-welcome') {
+    // נשאר על מסך הכניסה — ברירת המחדל, אין צורך בניווט
   } else if (state.currentUser) {
     updateHomeCard(state.currentUser);
     updateAssignmentDisplay();
@@ -2571,7 +2583,7 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
-  if (['screen-welcome', 'screen-home', 'screen-manager'].includes(id)) {
+  if (['screen-welcome', 'screen-home', 'screen-manager', 'screen-reader'].includes(id)) {
     localStorage.setItem('tehilim_lastScreen', id);
   }
   if (!_navFromHistory) {
