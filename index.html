@@ -2248,7 +2248,8 @@ function renderManagerList() {
       document.getElementById('selectedCount').textContent = state.selectedForSession.size;
     });
 
-    const isOwnRow = state.currentUser && String(m.id) === String(state.currentUser.id);
+    const isOwnRow = (state.currentUser && String(m.id) === String(state.currentUser.id))
+                  || (state.currentManager && String(m.id) === String(state.currentManager.id));
     const pencilBtn = isOwnRow ? document.createElement('button') : null;
     if (pencilBtn) {
       pencilBtn.className = 'btn-edit-pencil';
