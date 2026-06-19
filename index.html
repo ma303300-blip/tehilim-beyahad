@@ -1472,9 +1472,17 @@ function init() {
   renderBookshelf();
   bindEvents();
 
-  // הגדר מסך ראשוני — אם מחוברת, חזור למסך הבית
+  // שחזור המסך האחרון לאחר רענון
+  const lastScreen = localStorage.getItem('tehilim_lastScreen') || 'screen-welcome';
   history.replaceState({ depth: 1 }, '', '#screen-welcome');
-  if (state.currentUser) {
+
+  if (lastScreen === 'screen-manager' && state.currentManager) {
+    renderManagerCard();
+    renderManagerList();
+    fbListenMembers();
+    fbListenReadingStatus();
+    showScreen('screen-manager');
+  } else if (state.currentUser) {
     updateHomeCard(state.currentUser);
     updateAssignmentDisplay();
     showScreen('screen-home');
@@ -2557,6 +2565,9 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
+  if (['screen-welcome', 'screen-home', 'screen-manager'].includes(id)) {
+    localStorage.setItem('tehilim_lastScreen', id);
+  }
   if (!_navFromHistory) {
     _navStack.push(id);
     history.pushState({ depth: _navStack.length }, '', '#' + id);
