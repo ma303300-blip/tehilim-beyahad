@@ -3178,6 +3178,7 @@ async function doEndSession() {
   btn.textContent = '🔄 סיום מפגש — איפוס לחוג הבא';
   btn.disabled = false;
   showToast('✅ המפגש אופס! מוכנות לחוג הבא 🙏');
+  exitManager();
 }
 
 function fbListenMembers() {
