@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tehilim-beyahad-v103';
+const CACHE_NAME = 'tehilim-beyahad-v104';
 const ASSETS = [
   '/tehilim-beyahad/',
   '/tehilim-beyahad/manifest.json',
@@ -18,12 +18,14 @@ self.addEventListener('install', e => {
   );
 });
 
-// הפעלה מיידית + מחיקת קאש ישן
+// הפעלה מיידית + מחיקת קאש ישן + טעינה מחדש של כל הטאבים
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
       .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then(clients => clients.forEach(c => c.navigate(c.url)))
   );
 });
 
