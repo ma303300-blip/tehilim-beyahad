@@ -360,7 +360,7 @@
   .bookcase-img {
     width: 260px; display: block;
     position: absolute; top: 0; left: 0;
-    transition: opacity 0.55s ease;
+    transition: opacity 0.69s ease;
   }
   #bookcaseClosed { position: relative; opacity: 1; z-index: 2; }
   #bookcaseOpen   { opacity: 0; z-index: 1; }
@@ -2905,7 +2905,7 @@ function flyBooksToShelf(count) {
     `;
     document.body.appendChild(flyer);
 
-    const duration = 850;
+    const duration = 1063;
     const t0 = performance.now();
 
     function frame(now) {
@@ -2921,7 +2921,7 @@ function flyBooksToShelf(count) {
 
       // נחיתה — מסיר הflyer, מדליק הספר בספרייה
       flyer.remove();
-      slot.style.transition = 'opacity 0.18s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1)';
+      slot.style.transition = 'opacity 0.225s ease, transform 0.31s cubic-bezier(0.34,1.56,0.64,1)';
       slot.style.opacity    = '1';
       slot.style.transform  = 'scale(1)';
     }
@@ -2929,7 +2929,7 @@ function flyBooksToShelf(count) {
   }
 
   for (let i = 0; i < total; i++) {
-    setTimeout(() => animateOneBook(i), i * 140);
+    setTimeout(() => animateOneBook(i), i * 175);
   }
 }
 
