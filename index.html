@@ -2248,10 +2248,13 @@ function renderManagerList() {
       document.getElementById('selectedCount').textContent = state.selectedForSession.size;
     });
 
-    const pencilBtn = document.createElement('button');
-    pencilBtn.className = 'btn-edit-pencil';
-    pencilBtn.textContent = '✏️';
-    pencilBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditModal(m); });
+    const isOwnRow = state.currentUser && String(m.id) === String(state.currentUser.id);
+    const pencilBtn = isOwnRow ? document.createElement('button') : null;
+    if (pencilBtn) {
+      pencilBtn.className = 'btn-edit-pencil';
+      pencilBtn.textContent = '✏️';
+      pencilBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditModal(m); });
+    }
 
     const joinCheck = document.createElement('div');
     joinCheck.className = 'join-check';
@@ -2272,7 +2275,7 @@ function renderManagerList() {
 
     row.appendChild(avatarDiv);
     row.appendChild(nameDiv);
-    row.appendChild(pencilBtn);
+    if (pencilBtn) row.appendChild(pencilBtn);
     row.appendChild(joinCheck);
     row.appendChild(circle);
     list.appendChild(row);
