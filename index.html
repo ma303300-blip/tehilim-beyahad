@@ -60,7 +60,8 @@
 
   /* ===== SCREENS ===== */
   .screen { display: none; min-height: 100vh; position: relative; }
-  .screen.active { display: flex; flex-direction: column; }
+  @keyframes screen-fadein { from { opacity: 0; } to { opacity: 1; } }
+  .screen.active { display: flex; flex-direction: column; animation: screen-fadein 0.25s ease; }
   .screen > *:not(.bg-image) { position: relative; z-index: 1; }
 
   /* ===== WELCOME SCREEN ===== */
