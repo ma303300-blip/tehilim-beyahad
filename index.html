@@ -1479,14 +1479,24 @@ function init() {
     renderManagerList();
     fbListenMembers();
     fbListenReadingStatus();
+    // אם יש משתמשת רשומה — home נכנס למחסנית כדי שחזור ממנהלת יחזיר לפרופיל
+    if (state.currentUser) {
+      updateHomeCard(state.currentUser);
+      updateAssignmentDisplay();
+      _navStack.push('screen-home');
+      history.pushState({ depth: _navStack.length }, '', '#screen-home');
+    }
     showScreen('screen-manager');
   } else if (lastScreen === 'screen-reader' && state.currentUser && state.assignments[state.currentUser.id]) {
     psalmsFetch.then(() => {
+      updateHomeCard(state.currentUser);
+      updateAssignmentDisplay();
       if (state.tehilim) {
+        // home נכנס למחסנית כדי שחזור מהקריאה יחזיר לפרופיל ולא לכניסה
+        _navStack.push('screen-home');
+        history.pushState({ depth: _navStack.length }, '', '#screen-home');
         showAllChapters();
       } else {
-        updateHomeCard(state.currentUser);
-        updateAssignmentDisplay();
         showScreen('screen-home');
       }
     });
