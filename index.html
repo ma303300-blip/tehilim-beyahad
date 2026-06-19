@@ -2291,6 +2291,7 @@ function saveEdit() {
   }
 
   saveToStorage();
+  fbSaveMember(m);
   document.getElementById('modalEditMember').classList.remove('open');
   renderManagerList();
   showToast('✅ הפרטים עודכנו בהצלחה');
@@ -2816,6 +2817,7 @@ function fbSaveMember(member) {
     lastName: member.lastName,
     phone: member.phone || '',
     avatarIdx: member.avatarIdx ?? 0,
+    photo: member.photo || null,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   }, { merge: true }).catch(e => console.warn('fbSaveMember', e));
 }
@@ -3043,12 +3045,15 @@ function fbListenMembers() {
     snap.forEach(doc => fbMembers.push(doc.data()));
     let changed = false;
     fbMembers.forEach(fbM => {
-      const exists = state.members.find(m =>
+      const existing = state.members.find(m =>
         String(m.id) === String(fbM.id) || (fbM.phone && m.phone === fbM.phone)
       );
-      if (!exists) {
+      if (!existing) {
         state.members.push({ id: fbM.id, firstName: fbM.firstName, lastName: fbM.lastName,
-          phone: fbM.phone, avatarIdx: fbM.avatarIdx ?? 0, photo: null });
+          phone: fbM.phone, avatarIdx: fbM.avatarIdx ?? 0, photo: fbM.photo || null });
+        changed = true;
+      } else if (fbM.photo && existing.photo !== fbM.photo) {
+        existing.photo = fbM.photo;
         changed = true;
       }
     });
