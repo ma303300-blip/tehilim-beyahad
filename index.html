@@ -3943,17 +3943,21 @@ async function doEndSession() {
     }
   } catch(e) { console.warn('doEndSession Firebase', e); }
 
-  // איפוס לוקל
+  // איפוס לוקל — הכל
   state.assignments = {};
   state.customChapterCounts = {};
   state.sessionType = null;
+  state.selectedForSession = new Set();
   window._fbStatuses = {};
   localStorage.removeItem('tehilim_assignments');
   localStorage.removeItem('tehilim_sessionType');
+  // מחיקת סטטוס הצטרפות לכל החברות (במכשיר הנוכחי)
+  state.members.forEach(m => localStorage.removeItem(joinTodayKey() + '_' + m.id));
+  if (state.currentUser) localStorage.removeItem(joinTodayKey() + '_' + state.currentUser.id);
   clearAllBookmarks();
   saveToStorage();
   renderManagerList();
-  updateAssignmentDisplay && updateAssignmentDisplay();
+  if (state.currentUser) { updateAssignmentDisplay(); updateJoinButton(); }
 
   btn.textContent = '🔄 סיום מפגש — איפוס לחוג הבא';
   btn.disabled = false;
