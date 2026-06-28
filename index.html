@@ -2245,8 +2245,14 @@ function showBookmarkConfirm() {
   const ch = getCurrentVisibleChapter();
   if (!ch) { showToast('לא נמצא פרק לסימניה'); return; }
   _pendingBookmarkChapter = ch;
-  document.getElementById('bookmarkDialogTitle').textContent = `לשמור סימניה בתהילים ${toHebNum(ch)}?`;
-  document.getElementById('bookmarkDialogSub').textContent = 'הפרק יסומן ותחזרי אליו בפעם הבאה';
+  const existing = getBookmarkKey() ? localStorage.getItem(getBookmarkKey()) : null;
+  if (existing) {
+    document.getElementById('bookmarkDialogTitle').textContent = `להחליף סימניה לתהילים ${toHebNum(ch)}?`;
+    document.getElementById('bookmarkDialogSub').textContent = `הסימניה הקודמת (פרק ${toHebNum(parseInt(existing))}) תימחק`;
+  } else {
+    document.getElementById('bookmarkDialogTitle').textContent = `לשמור סימניה בתהילים ${toHebNum(ch)}?`;
+    document.getElementById('bookmarkDialogSub').textContent = 'הפרק יסומן ותחזרי אליו בפעם הבאה';
+  }
   document.getElementById('bookmarkOverlay').classList.add('open');
 }
 
