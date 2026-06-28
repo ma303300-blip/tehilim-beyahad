@@ -1052,6 +1052,21 @@
     font-family: inherit; font-size: 15px;
   }
 
+  /* RESUME BANNER */
+  #resumeBanner {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 68px);
+    left: 50%; transform: translateX(-50%);
+    background: rgba(210,30,30,0.92);
+    color: #fff; font-weight: 700; font-size: 15px;
+    padding: 9px 22px; border-radius: 22px;
+    z-index: 6000; pointer-events: none;
+    opacity: 0; transition: opacity 1.5s ease;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(200,20,20,0.4);
+  }
+  #resumeBanner.show { opacity: 1; transition: none; }
+
   /* BOOKMARK */
   @keyframes blink-red {
     0%, 100% { box-shadow: 0 0 0 3px #e03030, 0 0 18px 4px rgba(224,48,48,0.45); background: rgba(224,48,48,0.10); }
@@ -1428,6 +1443,7 @@
       <span class="speed-label">מהיר</span>
     </div>
   </div>
+  <div id="resumeBanner">📍 המשיכי מאיפה שסיימת</div>
   <div class="reader-content" id="readerContent"></div>
   <div class="font-controls faded" id="fontControls">
     <button class="font-btn" id="btnFontPlus">+</button>
@@ -2562,8 +2578,22 @@ function saveAutoPos() {
   if (!key) return;
   const readerEl = document.getElementById('screen-reader');
   if (!readerEl || !readerEl.classList.contains('active')) return;
-  const ch = getCurrentVisibleChapter();
-  if (ch) localStorage.setItem(key, String(ch));
+  if (window.scrollY > 0) localStorage.setItem(key, String(window.scrollY));
+}
+
+let _resumeDismissed = false;
+function showResumeBanner() {
+  _resumeDismissed = false;
+  const banner = document.getElementById('resumeBanner');
+  if (!banner) return;
+  banner.classList.add('show');
+  function dismiss() {
+    if (_resumeDismissed) return;
+    _resumeDismissed = true;
+    banner.classList.remove('show');
+    window.removeEventListener('scroll', dismiss);
+  }
+  window.addEventListener('scroll', dismiss, { once: true, passive: true });
 }
 
 function scrollToChapter(ch) {
@@ -2835,11 +2865,14 @@ function showAllChapters() {
   const bCh = bKey && localStorage.getItem(bKey);
   if (bCh) applyBookmarkMark(parseInt(bCh));
 
-  // גלילה: מיקום אוטומטי אחרון > סימניה ידנית > תחילה
+  // גלילה: מיקום מדויק אחרון > סימניה ידנית > תחילה
   const autoPosKey = getAutoPosKey();
-  const autoCh = autoPosKey && localStorage.getItem(autoPosKey);
-  if (autoCh) {
-    scrollToChapter(parseInt(autoCh));
+  const autoScrollY = autoPosKey && localStorage.getItem(autoPosKey);
+  if (autoScrollY && parseInt(autoScrollY) > 0) {
+    setTimeout(() => {
+      window.scrollTo(0, parseInt(autoScrollY));
+      showResumeBanner();
+    }, 100);
   } else if (bCh) {
     scrollToChapter(parseInt(bCh));
   } else {
