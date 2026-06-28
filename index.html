@@ -2581,19 +2581,18 @@ function saveAutoPos() {
   if (window.scrollY > 0) localStorage.setItem(key, String(window.scrollY));
 }
 
-let _resumeDismissed = false;
 function showResumeBanner() {
-  _resumeDismissed = false;
   const banner = document.getElementById('resumeBanner');
   if (!banner) return;
   banner.classList.add('show');
-  function dismiss() {
-    if (_resumeDismissed) return;
-    _resumeDismissed = true;
-    banner.classList.remove('show');
-    window.removeEventListener('scroll', dismiss);
-  }
-  window.addEventListener('scroll', dismiss, { once: true, passive: true });
+  // מחכה 400ms לפני הוספת listener כדי שה-scrollTo שחזר מיקום לא יסגור מיד
+  setTimeout(() => {
+    function dismiss() {
+      banner.classList.remove('show');
+      window.removeEventListener('scroll', dismiss);
+    }
+    window.addEventListener('scroll', dismiss, { once: true, passive: true });
+  }, 400);
 }
 
 function scrollToChapter(ch) {
