@@ -756,9 +756,11 @@
     border-radius: 20px; padding: 14px 16px;
     display: flex; align-items: center; gap: 14px;
     box-shadow: 0 8px 25px rgba(0,0,0,0.12), 0 0 0 1px rgba(60,180,90,0.4);
-    position: relative;
+    position: relative; cursor: pointer;
     animation: pulse-green 2.5s ease-in-out infinite;
+    transition: transform 0.15s;
   }
+  .manager-card:active { transform: scale(0.97); }
   .manager-card-crown {
     position: absolute; top: -10px; right: 14px;
     font-size: 20px; line-height: 1;
@@ -2288,6 +2290,20 @@ function bindEvents() {
   // Exit manager
   document.getElementById('btnExitManager').addEventListener('click', exitManager);
 
+  // לחיצה על כרטיס המנהלת → מעבר לפרופיל שלה לקריאה
+  document.getElementById('managerCardWrap').addEventListener('click', e => {
+    if (e.target.closest('#btnExitManager')) return; // לא לבטל לחיצת יציאה
+    if (!state.currentManager) return;
+    const memberProfile = state.members.find(m => String(m.id) === String(state.currentManager.id));
+    if (!memberProfile) { showToast('⚠️ המנהלת לא רשומה כמתפללת'); return; }
+    state.currentUser = { ...memberProfile };
+    saveToStorage();
+    updateHomeCard(state.currentUser);
+    updateAssignmentDisplay();
+    showScreen('screen-home');
+    showToast(`👋 שלום ${memberProfile.firstName}! הפרקים שלך מחכים`);
+  });
+
   // Manager → back to home/welcome
   document.getElementById('btnManagerToHome').addEventListener('click', goBack);
 
@@ -2626,6 +2642,8 @@ function openPartialModal() {
   document.getElementById('catHatzlacha').checked = false;
   document.getElementById('partialTotalBar').innerHTML = 'בחרי קטגוריה כדי להמשיך';
   _partialSelectedMembers = new Set();
+  // המנהלת תמיד מסומנת מראש
+  if (state.currentManager) _partialSelectedMembers.add(state.currentManager.id);
 
   // populate members
   const list = document.getElementById('partialMembersList');
@@ -2705,12 +2723,13 @@ function togglePartialCat(catId) {
 function doConfirmPartial() {
   const psalms = updatePartialCount();
   if (psalms.length === 0) { showToast('⚠️ בחרי לפחות קטגוריה אחת'); return; }
-  if (_partialSelectedMembers.size === 0) { showToast('⚠️ בחרי לפחות משתתפת אחת'); return; }
+  // המנהלת תמיד נספרת — אין צורך לבחור אחרת אם היא לבדה
+  // if (_partialSelectedMembers.size === 0) { showToast('⚠️ בחרי לפחות משתתפת אחת'); return; }
 
   const participants = [];
-  // מנהלת ראשונה אם נבחרה
-  if (_partialSelectedMembers.has(state.currentManager.id)) {
-    const m = state.members.find(m => m.id === state.currentManager.id) || state.currentManager;
+  // מנהלת תמיד ראשונה — תמיד נכנסת לחלוקה
+  {
+    const m = state.members.find(m => String(m.id) === String(state.currentManager.id)) || state.currentManager;
     participants.push(m);
   }
   state.members.forEach(m => {
