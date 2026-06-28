@@ -977,21 +977,64 @@
   .partial-member-row {
     display: flex; align-items: center; gap: 10px;
     padding: 10px 14px; border-radius: 12px;
-    background: rgba(255,255,255,0.05);
     margin-bottom: 6px; cursor: pointer;
-    transition: background 0.2s;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
   }
-  .partial-member-row.selected { background: rgba(201,168,76,0.14); }
+  .partial-member-row.selected { border-color: var(--gold); }
   .partial-member-check {
     width: 22px; height: 22px; border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.25);
+    border: 2px solid rgba(26,16,53,0.3);
     display: flex; align-items: center; justify-content: center;
     font-size: 14px; flex-shrink: 0; transition: all 0.2s;
+    background: rgba(255,255,255,0.5);
+    color: #1a1035; font-weight: 700;
   }
   .partial-member-row.selected .partial-member-check {
     background: var(--gold); border-color: var(--gold); color: #1a1035;
   }
-  .partial-member-name { flex: 1; color: #fdf8ed; font-size: 15px; }
+  .partial-member-name { flex: 1; color: #1a1035; font-size: 15px; font-weight: 600; }
+
+  /* SESSION TYPE POPUP */
+  #sessionTypeOverlay {
+    position: fixed; inset: 0; z-index: 9500;
+    background: rgba(26,16,53,0.82);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.22s ease;
+  }
+  #sessionTypeOverlay.open { opacity: 1; pointer-events: all; }
+  .session-type-dialog {
+    background: linear-gradient(155deg,#2c1f5e,#1a1035);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 24px; padding: 30px 22px 26px;
+    width: min(88vw, 340px);
+    box-shadow: 0 12px 48px rgba(0,0,0,0.55);
+    text-align: center;
+  }
+  .session-type-title {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 22px; font-weight: 700; color: #fdf8ed;
+    margin-bottom: 22px; line-height: 1.3;
+  }
+  .session-type-btn {
+    width: 100%; padding: 16px 14px;
+    border-radius: 16px; cursor: pointer; margin-bottom: 12px;
+    font-family: inherit; text-align: center;
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: block;
+  }
+  .session-type-btn:active { transform: scale(0.97); }
+  .session-btn-full {
+    background: rgba(201,168,76,0.18);
+    border: 1.5px solid rgba(201,168,76,0.45);
+  }
+  .session-btn-partial {
+    background: rgba(80,50,180,0.28);
+    border: 1.5px solid rgba(120,90,220,0.45);
+  }
+  .session-btn-icon { font-size: 30px; margin-bottom: 5px; }
+  .session-btn-label { font-size: 18px; font-weight: 700; color: #fdf8ed; }
+  .session-btn-sub { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 3px; }
   .partial-select-all {
     font-size: 13px; color: rgba(201,168,76,0.8);
     cursor: pointer; text-align: left; margin-bottom: 10px;
@@ -1336,6 +1379,12 @@
     color:#fff; box-shadow:0 4px 14px rgba(0,0,0,0.25);
   ">✨ שלחי פרקי תהילים חלקי</button>
 
+  <button id="btnChangeSession" style="
+    display:none; width:100%; margin-top:8px; padding:11px; border:1.5px solid rgba(201,168,76,0.35);
+    border-radius:14px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;
+    background:rgba(201,168,76,0.12); color:var(--gold);
+  ">🔄 שינוי מפגש</button>
+
   <button id="btnEndSession" style="
     width:100%; margin-top:10px; padding:13px; border:none; border-radius:14px;
     font-family:inherit; font-size:15px; font-weight:700; cursor:pointer;
@@ -1501,6 +1550,23 @@
   </div>
 </div>
 
+<!-- SESSION TYPE OVERLAY -->
+<div id="sessionTypeOverlay">
+  <div class="session-type-dialog">
+    <div class="session-type-title">איזה מפגש היום?</div>
+    <button class="session-type-btn session-btn-full" id="btnSessionFull">
+      <div class="session-btn-icon">📖</div>
+      <div class="session-btn-label">תהילים מלא</div>
+      <div class="session-btn-sub">150 פרקים</div>
+    </button>
+    <button class="session-type-btn session-btn-partial" id="btnSessionPartial">
+      <div class="session-btn-icon">✨</div>
+      <div class="session-btn-label">תהילים חלקי</div>
+      <div class="session-btn-sub">44 + 7 פרקים</div>
+    </button>
+  </div>
+</div>
+
 <!-- ===== SELECT MANAGER MODAL ===== -->
 <div class="modal-overlay" id="modalSelectManager">
   <div class="modal-box">
@@ -1650,6 +1716,7 @@ let state = {
   editingMember: null,
   editPhoto: null,
   editAvatarIdx: null,
+  sessionType: null,
 };
 
 let _customChaptersMember = null;
@@ -1662,6 +1729,7 @@ function saveToStorage() {
   if (state.currentUser) _s('tehilim_currentUser', JSON.stringify(state.currentUser));
   _s('tehilim_assignments', JSON.stringify(state.assignments));
   _s('tehilim_members', JSON.stringify(state.members));
+  _s('tehilim_sessionType', state.sessionType || '');
 }
 
 function loadFromStorage() {
@@ -1684,6 +1752,8 @@ function loadFromStorage() {
     if (manager) state.currentManager = JSON.parse(manager);
     const assignments = localStorage.getItem('tehilim_assignments');
     if (assignments) state.assignments = JSON.parse(assignments);
+    const stype = localStorage.getItem('tehilim_sessionType');
+    if (stype) state.sessionType = stype;
   } catch(e) { console.log('storage error', e); }
 }
 
@@ -1714,6 +1784,7 @@ function init() {
   if (lastScreen === 'screen-manager') {
     renderManagerCard();
     renderManagerList();
+    updateSessionButtons();
     fbListenMembers();
     fbListenReadingStatus();
     // אם יש משתמשת רשומה — home נכנס למחסנית כדי שחזור ממנהלת יחזיר לפרופיל
@@ -2077,6 +2148,11 @@ function bindEvents() {
   document.getElementById('customChaptersCancel').addEventListener('click', () => {
     document.getElementById('customChaptersOverlay').classList.remove('open');
   });
+
+  // Session type
+  document.getElementById('btnSessionFull').addEventListener('click', () => chooseSessionType('full'));
+  document.getElementById('btnSessionPartial').addEventListener('click', () => chooseSessionType('partial'));
+  document.getElementById('btnChangeSession').addEventListener('click', openSessionTypePopup);
 
   // Send chapters
   document.getElementById('btnSendChapters').addEventListener('click', doSendChapters);
@@ -2501,15 +2577,27 @@ function openPartialModal() {
   if (state.currentManager && !allParticipants.find(m => m.id === state.currentManager.id)) {
     allParticipants.unshift(state.currentManager);
   }
-  allParticipants.forEach(m => {
+  const ROW_COLORS_P = [
+    'rgba(255,200,200,0.90)', 'rgba(255,220,180,0.90)', 'rgba(255,240,180,0.90)',
+    'rgba(200,240,200,0.90)', 'rgba(180,230,255,0.90)', 'rgba(200,200,255,0.90)',
+    'rgba(240,200,255,0.90)', 'rgba(255,200,230,0.90)',
+  ];
+  allParticipants.forEach((m, idx) => {
     const row = document.createElement('div');
     row.className = 'partial-member-row';
     row.dataset.id = m.id;
+    row.style.background = ROW_COLORS_P[idx % ROW_COLORS_P.length];
     const check = document.createElement('div');
     check.className = 'partial-member-check';
     const name = document.createElement('div');
     name.className = 'partial-member-name';
     name.textContent = `${m.firstName} ${m.lastName}`;
+    // pre-select if already in session
+    if (state.selectedForSession.has(m.id)) {
+      _partialSelectedMembers.add(m.id);
+      row.classList.add('selected');
+      check.textContent = '✓';
+    }
     row.appendChild(check);
     row.appendChild(name);
     row.addEventListener('click', () => togglePartialMember(m.id));
@@ -2592,6 +2680,42 @@ function doConfirmPartial() {
     renderManagerList();
     showToast(`✅ ${psalms.length} פרקים חולקו בין ${participants.length} משתתפות`);
   });
+}
+
+function openSessionTypePopup() {
+  document.getElementById('sessionTypeOverlay').classList.add('open');
+}
+
+function chooseSessionType(type) {
+  const prev = state.sessionType;
+  state.sessionType = type;
+  if (prev && prev !== type) {
+    state.assignments = {};
+    state.customChapterCounts = {};
+    localStorage.removeItem('tehilim_assignments');
+    if (typeof fbSaveAssignments === 'function') fbSaveAssignments({});
+  }
+  saveToStorage();
+  document.getElementById('sessionTypeOverlay').classList.remove('open');
+  updateSessionButtons();
+  renderManagerList();
+}
+
+function updateSessionButtons() {
+  const sendBar = document.querySelector('#screen-manager .send-bar');
+  const full = document.getElementById('btnSendChapters');
+  const partial = document.getElementById('btnSendPartial');
+  const change = document.getElementById('btnChangeSession');
+  const t = state.sessionType;
+  if (!t || !state.currentManager) {
+    if (full) full.style.display = '';
+    if (partial) partial.style.display = '';
+    if (change) change.style.display = 'none';
+    return;
+  }
+  if (full) full.style.display = (t === 'full') ? '' : 'none';
+  if (partial) partial.style.display = (t === 'partial') ? '' : 'none';
+  if (change) change.style.display = '';
 }
 
 function toggleAutoScroll() {
@@ -2991,6 +3115,7 @@ function setManager(member) {
   document.getElementById('modalSelectManager').classList.remove('open');
   renderManagerCard();
   showToast(`👑 ${member.firstName} נקבעה כמנהלת`);
+  openSessionTypePopup();
 }
 
 function renderManagerCard() {
@@ -3007,10 +3132,13 @@ function renderManagerCard() {
 
 function exitManager() {
   state.currentManager = null;
+  state.sessionType = null;
   localStorage.removeItem('tehilim_manager');
+  localStorage.removeItem('tehilim_sessionType');
   document.getElementById('managerCardWrap').style.display = 'none';
   fbClearManager();
   updateManagerBanner(null);
+  updateSessionButtons();
   showToast('יצאת ממצב מנהלת');
   // ניווט חזרה — מנהלת שגם מתפללת → דף הבית, אחרת → ברוכות הבאות
   if (state.currentUser) {
@@ -3720,8 +3848,10 @@ async function doEndSession() {
   // איפוס לוקל
   state.assignments = {};
   state.customChapterCounts = {};
+  state.sessionType = null;
   window._fbStatuses = {};
   localStorage.removeItem('tehilim_assignments');
+  localStorage.removeItem('tehilim_sessionType');
   clearAllBookmarks();
   saveToStorage();
   renderManagerList();
