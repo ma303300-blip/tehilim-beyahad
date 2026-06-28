@@ -1925,7 +1925,7 @@ function goBack() {
     return;
   }
   const current = document.querySelector('.screen.active')?.id;
-  if (current === 'screen-reader') stopAutoScroll();
+  if (current === 'screen-reader') { stopAutoScroll(); saveAutoPos(); }
   _navStack.pop();
   const target = _navStack[_navStack.length - 1];
   if (target === 'screen-home' && state.currentUser) {
@@ -2220,6 +2220,15 @@ function bindEvents() {
     if (scrollInterval) startScrollInterval();
   });
 
+  // שמירת מיקום אוטומטית — גלילה + יציאה מכל סיבה
+  window.addEventListener('scroll', () => {
+    clearTimeout(_autoPosTimer);
+    _autoPosTimer = setTimeout(saveAutoPos, 600);
+  }, { passive: true });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) saveAutoPos(); });
+  window.addEventListener('pagehide', saveAutoPos);
+  window.addEventListener('beforeunload', saveAutoPos);
+
   // Wake controls on reader touch/scroll
   document.getElementById('screen-reader').addEventListener('touchstart', () => {
     wakeControls();
@@ -2314,7 +2323,7 @@ function bindEvents() {
     }
 
     const current = document.querySelector('.screen.active')?.id;
-    if (current === 'screen-reader') stopAutoScroll();
+    if (current === 'screen-reader') { stopAutoScroll(); saveAutoPos(); }
 
     _navStack.pop();
     const target = _navStack[_navStack.length - 1];
@@ -2535,18 +2544,36 @@ function scrollToBookmark() {
   const ch = localStorage.getItem(key);
   if (!ch) return;
   applyBookmarkMark(parseInt(ch));
-  const target = document.querySelector(`.reader-chapter-title[data-chapter="${ch}"]`);
-  if (target) {
-    setTimeout(() => {
-      const headerH = document.querySelector('.reader-header')?.offsetHeight || 60;
-      const y = target.getBoundingClientRect().top + window.scrollY - headerH - 12;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }, 80);
-  }
+  scrollToChapter(parseInt(ch));
 }
 
 function clearAllBookmarks() {
-  Object.keys(localStorage).filter(k => k.startsWith('tehilim_bookmark_')).forEach(k => localStorage.removeItem(k));
+  Object.keys(localStorage).filter(k => k.startsWith('tehilim_bookmark_') || k.startsWith('tehilim_autopos_')).forEach(k => localStorage.removeItem(k));
+}
+
+function getAutoPosKey() {
+  if (!state.currentUser) return null;
+  return `tehilim_autopos_${state.currentUser.id}`;
+}
+
+let _autoPosTimer = null;
+function saveAutoPos() {
+  const key = getAutoPosKey();
+  if (!key) return;
+  const readerEl = document.getElementById('screen-reader');
+  if (!readerEl || !readerEl.classList.contains('active')) return;
+  const ch = getCurrentVisibleChapter();
+  if (ch) localStorage.setItem(key, String(ch));
+}
+
+function scrollToChapter(ch) {
+  const target = document.querySelector(`.reader-chapter-title[data-chapter="${ch}"]`);
+  if (!target) return;
+  setTimeout(() => {
+    const headerH = document.querySelector('.reader-header')?.offsetHeight || 60;
+    const y = target.getBoundingClientRect().top + window.scrollY - headerH - 12;
+    window.scrollTo({ top: y, behavior: 'smooth' });
+  }, 80);
 }
 
 // ===== PARTIAL DISTRIBUTION =====
@@ -2787,6 +2814,7 @@ function showAllChapters() {
     doneBtn.addEventListener('click', () => {
       localStorage.setItem(doneKey, '1');
       localStorage.removeItem(joinTodayKey() + '_' + state.currentUser.id);
+      const apk = getAutoPosKey(); if (apk) localStorage.removeItem(apk);
       updateJoinButton();
       fbSetFinished(state.currentUser.id);
       doneBtn.textContent = '✅ סיימת לקרוא היום!';
@@ -2801,9 +2829,19 @@ function showAllChapters() {
   showScreen('screen-reader');
   applyFontSize();
   wakeControls();
+
+  // תמיד מציג את סימן הסימניה הידנית (עיגול אדום)
   const bKey = getBookmarkKey();
-  if (bKey && localStorage.getItem(bKey)) {
-    scrollToBookmark();
+  const bCh = bKey && localStorage.getItem(bKey);
+  if (bCh) applyBookmarkMark(parseInt(bCh));
+
+  // גלילה: מיקום אוטומטי אחרון > סימניה ידנית > תחילה
+  const autoPosKey = getAutoPosKey();
+  const autoCh = autoPosKey && localStorage.getItem(autoPosKey);
+  if (autoCh) {
+    scrollToChapter(parseInt(autoCh));
+  } else if (bCh) {
+    scrollToChapter(parseInt(bCh));
   } else {
     window.scrollTo(0, 0);
   }
