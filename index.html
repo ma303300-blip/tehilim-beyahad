@@ -1059,13 +1059,15 @@
     left: 50%; transform: translateX(-50%);
     background: rgba(210,30,30,0.92);
     color: #fff; font-weight: 700; font-size: 15px;
-    padding: 9px 22px; border-radius: 22px;
+    padding: 11px 26px; border-radius: 22px;
     z-index: 6000; pointer-events: none;
-    opacity: 0; transition: opacity 1.5s ease;
-    white-space: nowrap;
-    box-shadow: 0 4px 16px rgba(200,20,20,0.4);
+    opacity: 0; transition: opacity 2s ease;
+    white-space: nowrap; cursor: pointer; border: none;
+    font-family: inherit;
+    box-shadow: 0 4px 18px rgba(200,20,20,0.45);
   }
-  #resumeBanner.show { opacity: 1; transition: none; }
+  #resumeBanner.show { opacity: 1; transition: none; pointer-events: all; }
+  #resumeBanner.fading { opacity: 0; transition: opacity 2s ease; pointer-events: none; }
 
   /* BOOKMARK */
   @keyframes blink-red {
@@ -1443,7 +1445,7 @@
       <span class="speed-label">מהיר</span>
     </div>
   </div>
-  <div id="resumeBanner">📍 המשיכי מאיפה שסיימת</div>
+  <button id="resumeBanner">▶ לחצי להמשך קריאה</button>
   <div class="reader-content" id="readerContent"></div>
   <div class="font-controls faded" id="fontControls">
     <button class="font-btn" id="btnFontPlus">+</button>
@@ -2584,15 +2586,13 @@ function saveAutoPos() {
 function showResumeBanner() {
   const banner = document.getElementById('resumeBanner');
   if (!banner) return;
+  banner.classList.remove('fading');
   banner.classList.add('show');
-  // מחכה 400ms לפני הוספת listener כדי שה-scrollTo שחזר מיקום לא יסגור מיד
-  setTimeout(() => {
-    function dismiss() {
-      banner.classList.remove('show');
-      window.removeEventListener('scroll', dismiss);
-    }
-    window.addEventListener('scroll', dismiss, { once: true, passive: true });
-  }, 400);
+  banner.onclick = () => {
+    banner.classList.remove('show');
+    banner.classList.add('fading');
+    setTimeout(() => banner.classList.remove('fading'), 2000);
+  };
 }
 
 function scrollToChapter(ch) {
