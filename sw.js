@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tehilim-beyahad-v132';
+const CACHE_NAME = 'tehilim-beyahad-v133';
 const ASSETS = [
   '/tehilim-beyahad/',
   '/tehilim-beyahad/manifest.json',

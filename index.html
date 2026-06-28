@@ -3872,7 +3872,18 @@ function fbListenAssignments() {
     // עדכון באנר מנהלת
     updateManagerBanner(data.manager || null);
 
-    if (!data.assignments) return;
+    // אם assignments ריק — מפגש אופס, נקה הכל
+    if (!data.assignments || Object.keys(data.assignments).length === 0) {
+      if (state.currentUser) {
+        localStorage.removeItem(joinTodayKey() + '_' + state.currentUser.id);
+        updateJoinButton();
+      }
+      state.assignments = {};
+      saveToStorage();
+      if (state.currentUser) updateAssignmentDisplay();
+      renderBookshelf();
+      return;
+    }
     state.assignments = data.assignments;
     saveToStorage();
     if (state.currentUser) updateAssignmentDisplay();
@@ -3932,13 +3943,15 @@ async function doEndSession() {
   btn.disabled = true;
 
   try {
-    // מחיקת כל סטטוסי הקריאה
     if (window.db) {
+      // מחיקת סטטוסי קריאה
       const statusSnap = await window.db.collection('reading_status').get();
       const batch = window.db.batch();
       statusSnap.forEach(doc => batch.delete(doc.ref));
-      // מחיקת חלוקת הפרקים
-      batch.delete(window.db.collection('sessions').doc('current'));
+      // כתיבת מסמך איפוס — לא מוחקים, כדי שכל המאזינים יקבלו assignments:{}
+      batch.set(window.db.collection('sessions').doc('current'), {
+        manager: null, assignments: {}, sessionType: null
+      });
       await batch.commit();
     }
   } catch(e) { console.warn('doEndSession Firebase', e); }
