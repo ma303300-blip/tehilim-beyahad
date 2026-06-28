@@ -907,6 +907,59 @@
     line-height: 1;
   }
 
+  /* BOOKMARK */
+  @keyframes blink-red {
+    0%, 100% { box-shadow: 0 0 0 3px #e03030, 0 0 18px 4px rgba(224,48,48,0.45); background: rgba(224,48,48,0.10); }
+    50%       { box-shadow: 0 0 0 3px rgba(224,48,48,0.15), 0 0 4px 1px rgba(224,48,48,0.1); background: rgba(224,48,48,0.02); }
+  }
+  .bookmarked-chapter {
+    animation: blink-red 1.2s ease-in-out infinite;
+    border-radius: 6px;
+    position: relative;
+  }
+  .bookmarked-chapter::before {
+    content: '🔖';
+    position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+    font-size: 18px;
+  }
+  /* BOOKMARK CONFIRM DIALOG */
+  #bookmarkOverlay {
+    position: fixed; inset: 0; z-index: 9000;
+    background: rgba(26,16,53,0.72);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  #bookmarkOverlay.open { opacity: 1; pointer-events: all; }
+  .bookmark-dialog {
+    background: linear-gradient(155deg,#2c1f5e,#1a1035);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 20px; padding: 28px 24px 22px;
+    width: min(88vw, 340px); text-align: center;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.55);
+  }
+  .bookmark-dialog-icon { font-size: 36px; margin-bottom: 10px; }
+  .bookmark-dialog-title {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 20px; font-weight: 700; color: #fdf8ed;
+    margin-bottom: 6px;
+  }
+  .bookmark-dialog-sub {
+    font-size: 14px; color: rgba(255,255,255,0.55);
+    margin-bottom: 22px; line-height: 1.5;
+  }
+  .bookmark-dialog-btns { display: flex; gap: 12px; }
+  .bookmark-btn-confirm {
+    flex: 1; padding: 13px; border: none; border-radius: 12px; cursor: pointer;
+    background: linear-gradient(135deg,#c9a84c,#e8c97a);
+    color: #1a1035; font-family: inherit; font-size: 16px; font-weight: 700;
+  }
+  .bookmark-btn-cancel {
+    flex: 1; padding: 13px; border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; cursor: pointer;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.75); font-family: inherit; font-size: 16px;
+  }
+
   /* CHAPTER PARTICLE ANIMATION */
   .chapter-particle {
     position: fixed; font-size: 22px; pointer-events: none; z-index: 99999;
@@ -1221,6 +1274,20 @@
     <button class="font-btn" id="btnFontPlus">+</button>
     <button class="font-btn" id="btnFontMinus">−</button>
     <button class="font-btn" id="btnScrollPause" style="display:none">⏸</button>
+    <button class="font-btn" id="btnBookmark" title="סימניה">🔖</button>
+  </div>
+</div>
+
+<!-- ===== BOOKMARK CONFIRM DIALOG ===== -->
+<div id="bookmarkOverlay">
+  <div class="bookmark-dialog">
+    <div class="bookmark-dialog-icon">🔖</div>
+    <div class="bookmark-dialog-title" id="bookmarkDialogTitle">לשמור סימניה?</div>
+    <div class="bookmark-dialog-sub" id="bookmarkDialogSub">הפרק הנוכחי יסומן ותחזרי אליו בפעם הבאה</div>
+    <div class="bookmark-dialog-btns">
+      <button class="bookmark-btn-confirm" id="bookmarkConfirm">✓ שמירה</button>
+      <button class="bookmark-btn-cancel" id="bookmarkCancel">ביטול</button>
+    </div>
   </div>
 </div>
 
@@ -1902,6 +1969,12 @@ function bindEvents() {
   // Auto-scroll
   document.getElementById('btnAutoScroll').addEventListener('click', toggleAutoScroll);
   document.getElementById('btnScrollPause').addEventListener('click', toggleScrollPause);
+  document.getElementById('btnBookmark').addEventListener('click', showBookmarkConfirm);
+  document.getElementById('bookmarkConfirm').addEventListener('click', confirmBookmark);
+  document.getElementById('bookmarkCancel').addEventListener('click', () => {
+    document.getElementById('bookmarkOverlay').classList.remove('open');
+    _pendingBookmarkChapter = null;
+  });
   document.getElementById('scrollSpeedSlider').addEventListener('input', () => {
     if (scrollInterval) startScrollInterval();
   });
@@ -2144,6 +2217,75 @@ function toggleScrollPause() {
   wakeControls();
 }
 
+// ===== BOOKMARK =====
+let _pendingBookmarkChapter = null;
+
+function getBookmarkKey() {
+  if (!state.currentUser) return null;
+  return `tehilim_bookmark_${state.currentUser.id}`;
+}
+
+function getCurrentVisibleChapter() {
+  const titles = document.querySelectorAll('.reader-chapter-title[data-chapter]');
+  let best = null;
+  let bestTop = Infinity;
+  const headerH = document.querySelector('.reader-header')?.offsetHeight || 60;
+  titles.forEach(el => {
+    const rect = el.getBoundingClientRect();
+    const top = rect.top - headerH;
+    if (top <= 40 && rect.bottom > headerH) { best = el; bestTop = top; return; }
+    if (top > 40 && top < bestTop) { best = el; bestTop = top; }
+  });
+  if (!best && titles.length) best = titles[0];
+  return best ? parseInt(best.dataset.chapter) : null;
+}
+
+function showBookmarkConfirm() {
+  wakeControls();
+  const ch = getCurrentVisibleChapter();
+  if (!ch) { showToast('לא נמצא פרק לסימניה'); return; }
+  _pendingBookmarkChapter = ch;
+  document.getElementById('bookmarkDialogTitle').textContent = `לשמור סימניה בתהילים ${toHebNum(ch)}?`;
+  document.getElementById('bookmarkDialogSub').textContent = 'הפרק יסומן ותחזרי אליו בפעם הבאה';
+  document.getElementById('bookmarkOverlay').classList.add('open');
+}
+
+function confirmBookmark() {
+  document.getElementById('bookmarkOverlay').classList.remove('open');
+  if (!_pendingBookmarkChapter) return;
+  const key = getBookmarkKey();
+  if (key) localStorage.setItem(key, String(_pendingBookmarkChapter));
+  applyBookmarkMark(_pendingBookmarkChapter);
+  _pendingBookmarkChapter = null;
+  showToast(`🔖 סימניה נשמרה בפרק ${toHebNum(parseInt(localStorage.getItem(key)))}` );
+}
+
+function applyBookmarkMark(ch) {
+  document.querySelectorAll('.reader-chapter-title.bookmarked-chapter').forEach(el => el.classList.remove('bookmarked-chapter'));
+  const target = document.querySelector(`.reader-chapter-title[data-chapter="${ch}"]`);
+  if (target) target.classList.add('bookmarked-chapter');
+}
+
+function scrollToBookmark() {
+  const key = getBookmarkKey();
+  if (!key) return;
+  const ch = localStorage.getItem(key);
+  if (!ch) return;
+  applyBookmarkMark(parseInt(ch));
+  const target = document.querySelector(`.reader-chapter-title[data-chapter="${ch}"]`);
+  if (target) {
+    setTimeout(() => {
+      const headerH = document.querySelector('.reader-header')?.offsetHeight || 60;
+      const y = target.getBoundingClientRect().top + window.scrollY - headerH - 12;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }, 80);
+  }
+}
+
+function clearAllBookmarks() {
+  Object.keys(localStorage).filter(k => k.startsWith('tehilim_bookmark_')).forEach(k => localStorage.removeItem(k));
+}
+
 function toggleAutoScroll() {
   const btn = document.getElementById('btnAutoScroll');
   if (scrollInterval || scrollPaused) {
@@ -2176,6 +2318,7 @@ function showAllChapters() {
     if (!verses) continue;
     const title = document.createElement('div');
     title.className = 'reader-chapter-title';
+    title.dataset.chapter = ch;
     title.textContent = `תהילים ${toHebNum(ch)}`;
     content.appendChild(title);
     verses.forEach((text, i) => {
@@ -2218,9 +2361,14 @@ function showAllChapters() {
   content.appendChild(doneWrap);
 
   showScreen('screen-reader');
-  window.scrollTo(0, 0);
   applyFontSize();
   wakeControls();
+  const bKey = getBookmarkKey();
+  if (bKey && localStorage.getItem(bKey)) {
+    scrollToBookmark();
+  } else {
+    window.scrollTo(0, 0);
+  }
 }
 
 function toHebNum(n) {
@@ -3253,6 +3401,7 @@ async function doEndSession() {
   state.customChapterCounts = {};
   window._fbStatuses = {};
   localStorage.removeItem('tehilim_assignments');
+  clearAllBookmarks();
   saveToStorage();
   renderManagerList();
   updateAssignmentDisplay && updateAssignmentDisplay();
