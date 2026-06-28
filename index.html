@@ -816,15 +816,20 @@
 
   /* READER SCREEN */
   #screen-reader {
-    overflow-y: auto; padding-bottom: 60px;
+    padding-top: calc(62px + env(safe-area-inset-top, 0px));
+    padding-bottom: 60px;
     background: linear-gradient(160deg, #fdf8ed 0%, #f5e6c0 40%, #fdf8ed 70%, #eedca8 100%);
   }
   #screen-reader .bg-image { display: none; }
   .reader-header {
-    position: sticky; top: 0; z-index: 10;
     display: flex; flex-direction: column;
-    background: rgba(101,60,20,0.10);
+    background: rgba(253,248,237,0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-bottom: 1.5px solid rgba(101,60,20,0.2);
+  }
+  #screen-reader > .reader-header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   }
   .reader-header-row {
     display: flex; align-items: center; gap: 12px;
@@ -1053,6 +1058,8 @@
     background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.7);
     font-family: inherit; font-size: 15px;
   }
+
+  body.reading #managerAnnounceBanner { display: none !important; }
 
   /* RESUME BANNER */
   #resumeBanner {
@@ -3374,6 +3381,7 @@ function animateSendChapters(participants, onComplete) {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  document.body.classList.toggle('reading', id === 'screen-reader');
   window.scrollTo(0, 0);
   if (['screen-welcome', 'screen-home', 'screen-manager', 'screen-reader'].includes(id)) {
     localStorage.setItem('tehilim_lastScreen', id);
