@@ -2252,7 +2252,44 @@ function bindEvents() {
     clearTimeout(_autoPosTimer);
     _autoPosTimer = setTimeout(saveAutoPos, 600);
   }, { passive: true });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) saveAutoPos(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { saveAutoPos(); return; }
+    // חזרה לאפליקציה — סנכרון מיידי מ-Firebase
+    if (window.db) {
+      window.db.collection('sessions').doc('current').get().then(snap => {
+        if (!snap.exists) {
+          if (state.currentUser) {
+            localStorage.removeItem(joinTodayKey() + '_' + state.currentUser.id);
+            updateJoinButton();
+          }
+          state.assignments = {};
+          saveToStorage();
+          if (state.currentUser) updateAssignmentDisplay();
+          renderBookshelf();
+          updateManagerBanner(null);
+        } else {
+          const data = snap.data();
+          if (!data) return;
+          updateManagerBanner(data.manager || null);
+          if (!data.assignments || Object.keys(data.assignments).length === 0) {
+            if (state.currentUser) {
+              localStorage.removeItem(joinTodayKey() + '_' + state.currentUser.id);
+              updateJoinButton();
+            }
+            state.assignments = {};
+            saveToStorage();
+            if (state.currentUser) updateAssignmentDisplay();
+            renderBookshelf();
+          } else {
+            state.assignments = data.assignments;
+            saveToStorage();
+            if (state.currentUser) updateAssignmentDisplay();
+            renderBookshelf();
+          }
+        }
+      }).catch(() => {});
+    }
+  });
   window.addEventListener('pagehide', saveAutoPos);
   window.addEventListener('beforeunload', saveAutoPos);
 
