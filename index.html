@@ -1273,7 +1273,7 @@
   <div class="font-controls faded" id="fontControls">
     <button class="font-btn" id="btnFontPlus">+</button>
     <button class="font-btn" id="btnFontMinus">−</button>
-    <button class="font-btn" id="btnScrollPause" style="display:none">⏸</button>
+    <button class="font-btn" id="btnScrollPause" style="visibility:hidden">⏸</button>
     <button class="font-btn" id="btnBookmark" title="סימניה">🔖</button>
   </div>
 </div>
@@ -2188,7 +2188,7 @@ function stopAutoScroll() {
   const bar = document.getElementById('scrollSpeedBar');
   if (bar) bar.classList.remove('visible');
   const pauseBtn = document.getElementById('btnScrollPause');
-  if (pauseBtn) pauseBtn.style.display = 'none';
+  if (pauseBtn) { pauseBtn.style.display = ''; pauseBtn.style.visibility = 'hidden'; }
 }
 
 function startScrollInterval() {
@@ -2301,7 +2301,7 @@ function toggleAutoScroll() {
     btn.textContent = '⏸ עצור';
     document.getElementById('scrollSpeedBar').classList.add('visible');
     const pauseBtn = document.getElementById('btnScrollPause');
-    pauseBtn.style.display = 'flex';
+    pauseBtn.style.visibility = 'visible';
     pauseBtn.textContent = '⏸';
     startScrollInterval();
     wakeControls();
