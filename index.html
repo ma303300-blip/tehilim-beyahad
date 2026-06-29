@@ -2276,6 +2276,7 @@ function bindEvents() {
               localStorage.removeItem(joinTodayKey() + '_' + state.currentUser.id);
               updateJoinButton();
             }
+            if (data.resetAt) clearAllBookmarks();
             state.assignments = {};
             saveToStorage();
             if (state.currentUser) updateAssignmentDisplay();
@@ -3915,6 +3916,8 @@ function fbListenAssignments() {
         localStorage.removeItem(joinTodayKey() + '_' + state.currentUser.id);
         updateJoinButton();
       }
+      // איפוס מכוון על ידי מנהלת — מחק גם מיקום קריאה וסימניות
+      if (data.resetAt) clearAllBookmarks();
       state.assignments = {};
       saveToStorage();
       if (state.currentUser) updateAssignmentDisplay();
@@ -3987,7 +3990,7 @@ async function doEndSession() {
       statusSnap.forEach(doc => batch.delete(doc.ref));
       // כתיבת מסמך איפוס — לא מוחקים, כדי שכל המאזינים יקבלו assignments:{}
       batch.set(window.db.collection('sessions').doc('current'), {
-        manager: null, assignments: {}, sessionType: null
+        manager: null, assignments: {}, sessionType: null, resetAt: Date.now()
       });
       await batch.commit();
     }
